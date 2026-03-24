@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.lzs.ymcc.mapper.CourseTeacherMapper">
+    <resultMap id="BaseResultMap" type="cn.lzs.ymcc.domain.CourseTeacher">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="course_id" property="courseId" jdbcType="BIGINT"/>
+        <result column="teacher_id" property="teacherId" jdbcType="BIGINT"/>
+    </resultMap>
+
+    <insert id="insertBatch" >
+        insert into t_course_teacher (course_id, teacher_id)
+        values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.courseId,jdbcType=BIGINT}, #{item.teacherId,jdbcType=BIGINT})
+        </foreach>
+
+    </insert>
+    <select id="getTeachersByCourseId" resultType="cn.lzs.ymcc.domain.Teacher" parameterType="java.lang.Long">
+    select t.id,
+           t.name,
+           t.intro,
+           t.head_img as headImg,
+           t.position,
+           t.tags,
+           t.technology
+    from t_teacher t join t_course_teacher ct on t.id = ct.teacher_id
+    where ct.course_id = #{courseId}
+    </select>
+
+
+</mapper>

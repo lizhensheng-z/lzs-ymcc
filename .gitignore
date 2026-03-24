@@ -1,0 +1,12 @@
+@"
+.idea/
+*.iml
+target/
+*.class
+node_modules/
+dist/
+application*.yml
+bootstrap*.yml
+*.log
+.DS_Store
+"@ | Out-File .gitignore -Encoding utf8

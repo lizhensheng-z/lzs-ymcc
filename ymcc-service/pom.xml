@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>cn.lzs.ymcc</groupId>
+        <artifactId>lzs-ymcc</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>ymcc-service</artifactId>
+    <packaging>pom</packaging>
+    <modules>
+        <module>ymcc-service-system</module>
+        <module>ymcc-service-uaa</module>
+        <module>ymcc-service-user</module>
+        <module>ymcc-service-common</module>
+        <module>ymcc-service-course</module>
+        <module>ymcc-service-media</module>
+        <module>ymcc-service-search</module>
+        <module>ymcc-service-order</module>
+        <module>ymcc-service-pay</module>
+    </modules>
+
+    <properties>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+    <dependencies>
+        <dependency>
+            <groupId>cn.lzs.ymcc</groupId>
+            <artifactId>ymcc-basic-dependency</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>cn.lzs.ymcc</groupId>
+            <artifactId>ymcc-pojo-user</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+    </dependencies>
+</project>
