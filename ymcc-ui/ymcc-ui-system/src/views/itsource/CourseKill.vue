@@ -36,9 +36,9 @@
 			</el-table-column>
 			<el-table-column prop="killCount" label="数量" width="80">
 			</el-table-column>
-			<el-table-column prop="beginTimeStr" label="开秒时间" >
+			<el-table-column prop="startTime" label="开始时间" >
 			</el-table-column>
-			<el-table-column prop="endTimeStr" label="结束时间" >
+			<el-table-column prop="endTime" label="结束时间" >
 			</el-table-column>
 			<el-table-column label="操作" width="180">
 				<template scope="scope">
@@ -112,7 +112,7 @@
 			},
 			//性别显示转换
 			formatStatus: function (row, column) {
-				return row.killStatus == 1 ? '已发布' : row.killStatus == 0 ? '未发布' : '未知';
+				return row.publishStatus == 1 ? '已发布' : row.publishStatus== 0 ? '未发布' : '未知';
 			},
 			selectPage(val) {
 				this.page = val;

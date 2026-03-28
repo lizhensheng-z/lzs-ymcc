@@ -1,5 +1,6 @@
 package cn.lzs.ymcc.web.controller;
 
+import cn.lzs.ymcc.dto.KillOrderParamDto;
 import cn.lzs.ymcc.dto.PlaceOrderDTO;
 import cn.lzs.ymcc.dto.UpdatePayStatusOrderDTO;
 import cn.lzs.ymcc.service.ICourseOrderService;
@@ -11,6 +12,7 @@ import com.baomidou.mybatisplus.plugins.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -19,7 +21,16 @@ public class CourseOrderController {
 
     @Autowired
     public ICourseOrderService courseOrderService;
-
+    /**
+     *  秒杀下单
+     * @param dto
+     * @return
+     */
+    @PostMapping("/killPlaceOrder")
+    public JSONResult killPlaceOrder(@Valid @RequestBody KillOrderParamDto dto){
+        String orderNo = courseOrderService.killPlaceOrder(dto);
+        return JSONResult.success(orderNo);
+    }
     /**
      * 生成支付订单
      */

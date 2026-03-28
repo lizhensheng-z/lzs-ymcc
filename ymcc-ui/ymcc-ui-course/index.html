@@ -95,7 +95,7 @@
 				}
 			});
 		</script>
-				<title>IT云课堂系统</title>
+				<title>源码云课堂系统</title>
 	</head>
 
 	<body class="pace-done">
@@ -218,7 +218,7 @@
 					<li class="menu-item">
 						<div class="menu">
 							<a class="menu-hd we-chat" href="" target="_top">
-								<i></i> 关注IT
+								<i></i> 关注源码
 								<b></b>
 							</a>
 							<div id="menu-5" class="menu-bd we-chat-qrcode">
@@ -882,8 +882,7 @@
 											<p style="font-size: 14px;margin: 5px">{{course.courseName}}</p>
 											<p style="font-size: 14px;margin: 5px;margin-top: 20px">
 												<span style="color: #ed8072">{{course.timeStr}}</span>
-
-												<a class="killStatusBtn"  target="_blank" :href="'/kill-detail.html?courseId='+course.courseId+'&killId='+course.id"
+												<a class="killStatusBtn"  target="_blank" :href="'/kill-detail.html?courseId='+course.courseId+'&killId='+course.id +'&activityId='+course.activityId"
 												   :style="course.killing?'background-color: #df0021;':''">{{course.killStatusName}}</a>
 											</p>
 
@@ -2506,7 +2505,7 @@
 					<a href="javascript:;" rel="nofollow">客服热线028-86261949</a>
 				</p>
 				<p class="footer-otherlink">
-					<a title="IT商城" target="_blank" href="http://itsource.cn">IT商城</a>
+					<a title="源码商城" target="_blank" href="http://itsource.cn">源码商城</a>
 
 					|
 
@@ -2527,7 +2526,7 @@
 
 					|
 
-					<a title="IT咨询有限公司" target="_blank" href="http://course.ymcc.com">IT咨询有限公司</a>
+					<a title="源代码教育咨询有限公司" target="_blank" href="http://course.ymcc.com">源代码教育咨询有限公司</a>
 
 				</p>
 
@@ -2578,7 +2577,6 @@
 						loadKillCourses() {
 							//发起请求
 							this.$http.get("/kill/killCourse/online/all").then(res=>{
-
 								let {success , data,message} = res.data;
 								if(success){
 									this.killCourses = data;

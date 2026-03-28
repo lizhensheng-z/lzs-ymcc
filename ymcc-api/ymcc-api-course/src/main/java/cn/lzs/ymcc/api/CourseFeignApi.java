@@ -27,4 +27,12 @@ public interface CourseFeignApi {
     @PostMapping("/addCourseUserLearn")
     public JSONResult addCourseUserLearn(@RequestBody CourseUserLearnDTO courseUserLearnDTO);
 
+    /**
+     * 获取订单信息
+     * @param courseIds
+     * @return
+     */
+    @GetMapping("course/rpc/info/{courseIds}")
+    JSONResult info(@PathVariable String courseIds);
+
 }

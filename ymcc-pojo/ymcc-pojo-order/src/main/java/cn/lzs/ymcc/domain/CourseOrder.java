@@ -2,12 +2,14 @@ package cn.lzs.ymcc.domain;
 
 import com.baomidou.mybatisplus.enums.IdType;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Date;
 import com.baomidou.mybatisplus.annotations.TableId;
 import com.baomidou.mybatisplus.annotations.TableField;
 import com.baomidou.mybatisplus.activerecord.Model;
 import com.baomidou.mybatisplus.annotations.TableName;
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * <p>
@@ -19,10 +21,12 @@ import java.io.Serializable;
  */
 @TableName("t_course_order")
 public class CourseOrder extends Model<CourseOrder> {
-
+    public static final Integer STATE_WAITE_PAY = 0;
     public static final long serialVersionUID = 1L;
     //0下单成功 待支付
     public static final Integer PendingPayment = 0;
+    public static final Integer STATE_PAY_SUCCESS = 1;
+    public static final Integer STATE_CANCEL = 2;
     //1支付成功订单完成
     public static final Integer OrderComplete = 1;
     //2用户手动取消订单(未支付)
@@ -64,7 +68,7 @@ public class CourseOrder extends Model<CourseOrder> {
      * 支付总的价格
      */
     @TableField("total_amount")
-    private BigDecimal totalAmount;
+    private BigDecimal totalAmount ;
     /**
      * 秒杀数量
      */
@@ -87,6 +91,20 @@ public class CourseOrder extends Model<CourseOrder> {
     @TableField("pay_type")
     private Integer payType;
 
+    // 主订单对应的子订单
+    @TableField(exist = false)
+    private List<CourseOrderItem> items = new ArrayList<>();
+
+
+
+
+    public List<CourseOrderItem> getItems() {
+        return items;
+    }
+
+    public void setItems(List<CourseOrderItem> items) {
+        this.items = items;
+    }
 
     public Long getId() {
         return id;
@@ -184,17 +202,17 @@ public class CourseOrder extends Model<CourseOrder> {
     @Override
     public String toString() {
         return "CourseOrder{" +
-        ", id=" + id +
-        ", createTime=" + createTime +
-        ", updateTime=" + updateTime +
-        ", orderNo=" + orderNo +
-        ", totalAmount=" + totalAmount +
-        ", totalCount=" + totalCount +
-        ", statusOrder=" + statusOrder +
-        ", userId=" + userId +
-        ", title=" + title +
-        ", version=" + version +
-        ", payType=" + payType +
-        "}";
+                ", id=" + id +
+                ", createTime=" + createTime +
+                ", updateTime=" + updateTime +
+                ", orderNo=" + orderNo +
+                ", totalAmount=" + totalAmount +
+                ", totalCount=" + totalCount +
+                ", statusOrder=" + statusOrder +
+                ", userId=" + userId +
+                ", title=" + title +
+                ", version=" + version +
+                ", payType=" + payType +
+                "}";
     }
 }

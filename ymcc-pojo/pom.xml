@@ -20,6 +20,7 @@
         <module>ymcc-pojo-search</module>
         <module>ymcc-pojo-common</module>
         <module>ymcc-pojo-pay</module>
+        <module>ymcc-pojo-kill</module>
     </modules>
 
     <properties>

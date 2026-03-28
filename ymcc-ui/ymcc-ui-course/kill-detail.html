@@ -5,7 +5,7 @@
 		<link rel="shortcut icon" href="https://www.itsource.cn/img/logo_small.jpg">
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
-		<title>IT云课堂 - 购我所爱 I LOVE BUY</title>
+		<title>源码云课堂 - 购我所爱 I LOVE BUY</title>
 
 		<meta http-equiv="X-UA-Compatible" content="IE=edge,Chrome=1">
 		<!-- 网站头像 -->
@@ -129,7 +129,7 @@
 				<ul>
 					<li>
 						<a class="menu-hd home" href="http://course.ymcc.com:6002/index.html" target="_top">
-							<i></i> IT云课堂首页
+							<i></i> 源码云课堂首页
 						</a>
 					</li>
 					<li class="menu-item">
@@ -167,7 +167,7 @@
 					<li class="menu-item">
 						<div class="menu">
 							<a class="menu-hd we-chat" href="" target="_top">
-								<i></i> 关注IT云课堂
+								<i></i> 关注源码云课堂
 								<b></b>
 							</a>
 							<div id="menu-5" class="menu-bd we-chat-qrcode">
@@ -276,7 +276,7 @@
 								</li>
 
 								<li>
-									<a target="_blank" href="#">RedisIT</a>
+									<a target="_blank" href="#">Redis源码</a>
 								</li>
 
 								<li>
@@ -714,12 +714,12 @@
 										<!--售罄-->
 
 										<div class="p-img">
-											<a target="_blank" title="VUEIT解析系列" href="#" style="background: url({ imageurl($ lazyload_image)">
+											<a target="_blank" title="VUE源码解析系列" href="#" style="background: url({ imageurl($ lazyload_image)">
 												<img alt="" src="img/test/14789669544048(1).png" data-original="http://itsource.oss-cn-beijing.aliyuncs.com/图片/shop/6/gallery/2016/11/12/14789669544048.png?x-oss-process=image/resize,m_pad,limit_0,h_450,w_450" style="display: inline;">
 											</a>
 										</div>
 										<div class="p-name">
-											<a target="_blank" title="VUEIT解析系列" href="#">VUEIT解析系列</a>
+											<a target="_blank" title="VUE源码解析系列" href="#">VUE源码解析系列</a>
 										</div>
 										<div class="p-price">
 											<span class="sale-price second-color">￥2000</span>
@@ -1291,7 +1291,7 @@
 					<a href="javascript:;" rel="nofollow">客服热线028-86261949</a>
 				</p>
 				<p class="footer-otherlink">
-					<a title="IT商城" target="_blank" href="#">IT商城</a>
+					<a title="源码商城" target="_blank" href="#">源码商城</a>
 
 					|
 
@@ -1311,7 +1311,7 @@
 
 					|
 
-					<a title="IT教育咨询有限公司" target="_blank" href="#">IT教育咨询有限公司</a>
+					<a title="源代码教育咨询有限公司" target="_blank" href="#">源代码教育咨询有限公司</a>
 
 				</p>
 
@@ -1361,6 +1361,7 @@
 						courseDetail:{},
 						courseId:"",
 						killId:"",
+						activityId:"",
 						killCourse:{},
 						killing:true,
 						killBtn:"nokillBtn",
@@ -1393,8 +1394,8 @@
 					getCourse(){
 						if(this.courseId){
 							//发送请求到后台获取数据
-							this.$http.get("course/course/detail/data/"+this.courseId).then(res=>{
-								if(res.data.data){
+							this.$http.get("course/course/getDetail/"+this.courseId).then(res=>{
+								if(res.data ){
 									this.course = res.data.data.course;
 									this.courseMarket = res.data.data.courseMarket;
 									this.courseChapters = res.data.data.courseChapters;
@@ -1411,7 +1412,7 @@
 						//发送请求到后台获取数据
 						let param = {
 							killCourseId:this.killId,
-							killCode:this.killCourse.killCode
+							activityId: this.activityId
 						};
 						this.$http.post("kill/killCourse/kill",param).then(res=>{
 							let {success , message , data} = res.data;
@@ -1445,7 +1446,7 @@
 							//发送请求到后台获取数据
 
 							let res =  await axios({
-								url: "kill/killCourse/online/one/"+this.killId,
+								url: "kill/killCourse/online/one/"+this.killId+"/"+this.activityId,
 								method: 'get'
 							});
 							if(res && res.data){
@@ -1553,6 +1554,7 @@
 					//获取参数秒杀ID，课程ID
 					var courseId = api.getQueryVariable("courseId");
 					var killId = api.getQueryVariable("killId");
+					var activityId = api.getQueryVariable("activityId");
 					//没有参数跳转首页
 					if(!courseId || !killId){
 						$.alert("非法请求");
@@ -1562,6 +1564,7 @@
 
 					this.courseId = courseId;
 					this.killId = killId;
+					this.activityId = activityId;
 					//加载课程和秒杀课程
 					this.getCourse();
 					this.schduleKillTime();

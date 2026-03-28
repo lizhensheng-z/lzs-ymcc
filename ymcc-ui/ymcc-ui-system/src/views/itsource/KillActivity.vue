@@ -23,16 +23,18 @@
 			</el-table-column>
 			<el-table-column prop="name" label="活动名" width="200" >
 			</el-table-column>
-			<el-table-column prop="beginTimeStr" label="开始时间" sortable>
+			<el-table-column prop="startTime" label="开始时间" sortable>
 			</el-table-column>
-			<el-table-column prop="endTimeStr" label="结束时间" >
+			<el-table-column prop="endTime" label="结束时间" >
 			</el-table-column>
 			<el-table-column prop="timeStr" label="时间段" >
 			</el-table-column>
 			<el-table-column prop="killStatus" label="状态" :formatter="formatStatus" sortable width="80">
 			</el-table-column>
-			<el-table-column label="操作" width="200">
+			<el-table-column label="操作" width="400">
 				<template scope="scope">
+					<el-button size="small" @click="publish(scope.row)" icon="el-icon-edit" type="primary">发布</el-button>
+					<el-button size="small" @click="UnPublish( scope.row)" icon="el-icon-edit" type="danger">下架</el-button>
 					<el-button size="small" @click="edit( scope.row)" icon="el-icon-edit" type="primary">编辑</el-button>
 <!--					<el-button size="small" @click="edit( scope.row)" icon="el-icon-edit">取消发布</el-button>-->
 					<el-button type="danger" size="small" @click="del( scope.row)" icon="el-icon-close">删除</el-button>
@@ -56,7 +58,7 @@
 				</el-form-item>
 				<el-form-item label="秒杀时间"  >
 					<el-date-picker  style="width: 290px" prop="beginTime"
-									 v-model="addForm.beginTime"
+									 v-model="addForm.startTime"
 									 type="datetime"
 									 value-format="yyyy-MM-dd HH:mm:ss"
 									 size="small"
@@ -112,13 +114,34 @@
 				//新增界面数据
 				addForm: {
 					name: '',
-					beginTime:"",
+          startTime:"",
 					endTime:""
 				}
 
 			}
 		},
 		methods: {
+      // 活动发布
+      publish(row){
+          let activityId = row.id
+          this.$http.post("/kill/killActivity/publish/" + activityId).then(result=>{
+            let {success,message,code} = result.data;
+            if(success){
+              this.$message({ message: "发布成功", type: 'success' });
+            }else{
+              this.$message({ message: "数据加载失败["+message+"]", type: 'error' });
+            }
+            this.getTableData();
+          }).catch(error => {
+            this.$message({ message: "数据加载失败["+error.message+"]", type: 'error' });
+          })
+      },
+
+      // 活动下架
+      UnPublish(row){
+
+      },
+
 			//start 表格相关============================================================================================
 			selsChange: function (sels) {
 				this.sels = sels;
@@ -187,6 +210,22 @@
 					}
 				});
 			},
+
+     // 删除活动操作
+      del(row){
+        let id = row.id
+        this.$http.post("/kill/killActivity/delete/" + id).then(result=>{
+          let {success,message,code} = result.data;
+          if(success){
+            this.$message({ message: "删除成功", type: 'success' });
+          }else{
+            this.$message({ message: "删除失败["+message+"]", type: 'error' });
+          }
+          this.getTableData();
+        }).catch(error => {
+          this.$message({ message: "数据加载失败["+error.message+"]", type: 'error' });
+        })
+      }
 
 		},
 		mounted() {
