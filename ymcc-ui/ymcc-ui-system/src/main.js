@@ -3,7 +3,7 @@ import Vue from 'vue'
 import App from './App'
 import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css'
-import 'main.css'
+import './styles/page.css'
 // import 'element-ui/lib/theme-default/index.css'
 //import './assets/theme/theme-green/index.css'
 import VueRouter from 'vue-router'
@@ -23,8 +23,8 @@ axios.defaults.baseURL='http://localhost:10010/ymcc';
 //全局属性配置，在任意组件内可以使用this.$http获取axios对象
 Vue.prototype.$http = axios
 
-import PartUpload from 'upload.vue'
-Vue.component("PartUpload", PartUpload);
+// import PartUpload from 'upload.vue'
+// Vue.component("PartUpload", PartUpload);
 //处理Token===================================================================================================
 function toLogin(){
     alert("登录失效,请重新登录");
