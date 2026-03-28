@@ -26,7 +26,7 @@ public class KillActivity extends Model<KillActivity> {
     @TableField("time_str")
     private String timeStr;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    @TableField("start_time")
+    @TableField("begin_time")
     private Date startTime;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @TableField("end_time")
@@ -39,7 +39,16 @@ public class KillActivity extends Model<KillActivity> {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @TableField("publish_time")
     private Date publishTime;
+    @TableField("create_time")
+    private Date createTime;
 
+    public Date getCreateTime() {
+        return createTime;
+    }
+
+    public void setCreateTime(Date createTime) {
+        this.createTime = createTime;
+    }
 
     public Long getId() {
         return id;

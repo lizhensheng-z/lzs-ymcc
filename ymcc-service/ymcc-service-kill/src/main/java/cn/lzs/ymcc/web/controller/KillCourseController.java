@@ -64,6 +64,7 @@ public class KillCourseController {
      */
     @RequestMapping(value = "/save", method = RequestMethod.POST)
     public JSONResult saveOrUpdate(@RequestBody KillCourse killCourse) {
+        killCourse.setKillLimit(1);
         if (killCourse.getId() != null) {
             killCourseService.updateById(killCourse);
         } else {

@@ -7,7 +7,7 @@
         <id column="id" property="id" />
         <result column="name" property="name" />
         <result column="time_str" property="timeStr" />
-        <result column="begin_time" property="beginTime" />
+        <result column="begin_time" property="startTime" />
         <result column="end_time" property="endTime" />
         <result column="publish_status" property="publishStatus" />
         <result column="publish_time" property="publishTime" />
