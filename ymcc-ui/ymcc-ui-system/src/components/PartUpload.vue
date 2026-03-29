@@ -254,12 +254,12 @@ const SimpleMD5 = (function() {
 export default {
   name: 'PartUpload',
   props: {
-    // 课程ID
+    // 课程 ID
     courseId: {
       type: [String, Number],
       default: ''
     },
-    // 章节ID
+    // 章节 ID
     chapterId: {
       type: [String, Number],
       default: ''
@@ -278,6 +278,11 @@ export default {
     name: {
       type: String,
       default: ''
+    },
+    // 视频序号（课程序列号）
+    videoNumber: {
+      type: [String, Number],
+      default: 1
     }
   },
   data() {
@@ -300,8 +305,8 @@ export default {
       totalProgress: 0,
       // 分块进度
       chunkProgress: 0,
-      // 进度状态
-      progressStatus: '',
+      // 进度状态 - 不传表示没有状态
+      progressStatus: undefined,
       // 上传状态文本
       uploadStatusText: '准备上传...',
       // 分块大小（2MB）
@@ -428,20 +433,23 @@ export default {
      * 注册文件
      */
     async registerFile() {
-      const params = {
-        fileMd5: this.fileMd5,
-        fileName: this.file.name,
-        fileSize: this.file.size,
-        mimetype: this.file.type,
-        fileExt: this.getFileExt(this.file.name),
-        courseId: this.courseId,
-        chapterId: this.chapterId,
-        courseName: this.courseName,
-        chapterName: this.chapterName,
-        name: this.name || this.file.name
-      };
+      const params = new URLSearchParams();
+      params.append('fileMd5', this.fileMd5);
+      params.append('fileName', this.file.name);
+      params.append('fileSize', this.file.size);
+      params.append('mimetype', this.file.type);
+      params.append('fileExt', this.getFileExt(this.file.name));
+      params.append('courseId', this.courseId);
+      params.append('chapterId', this.chapterId);
+      params.append('courseName', this.courseName);
+      params.append('chapterName', this.chapterName);
+      params.append('name', this.name || this.file.name);
 
-      const result = await this.$http.post('/media/mediaFile/register', params);
+      const result = await this.$http.post('/media/mediaFile/register', params, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      });
       return result.data;
     },
 
@@ -453,12 +461,16 @@ export default {
       this.uploadedChunks = [];
 
       for (let i = 0; i < this.totalChunks; i++) {
-        const params = {
-          fileMd5: this.fileMd5,
-          chunk: i
-        };
+        const params = new URLSearchParams();
+        params.append('fileMd5', this.fileMd5);
+        params.append('chunk', i);
+        params.append('chunkSize', this.chunkSize);
 
-        const result = await this.$http.post('/media/mediaFile/checkchunk', params);
+        const result = await this.$http.post('/media/mediaFile/checkchunk', params, {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        });
         if (result.data.success && result.data.data) {
           this.uploadedChunks.push(i);
         }
@@ -521,37 +533,42 @@ export default {
      * 合并分块
      */
     async mergeChunks() {
-      const params = {
-        fileMd5: this.fileMd5,
-        fileName: this.file.name,
-        fileSize: this.file.size,
-        mimetype: this.file.type,
-        fileExt: this.getFileExt(this.file.name),
-        chunkTotal: this.totalChunks,
-        courseId: this.courseId,
-        chapterId: this.chapterId,
-        courseName: this.courseName,
-        chapterName: this.chapterName,
-        name: this.name || this.file.name
-      };
-
-      const result = await this.$http.post('/media/mediaFile/mergechunks', params);
-
+      const params = new URLSearchParams();
+      params.append('fileMd5', this.fileMd5);
+      params.append('fileName', this.file.name);
+      params.append('fileSize', this.file.size);
+      params.append('mimetype', this.file.type);
+      params.append('fileExt', this.getFileExt(this.file.name));
+      params.append('chunkTotal', this.totalChunks);
+      params.append('courseId', this.courseId);
+      params.append('chapterId', this.chapterId);
+      params.append('courseName', this.courseName);
+      params.append('chapterName', this.chapterName);
+      params.append('name', this.name || this.file.name);
+      // 添加 videoNumber 参数（课程序列号）
+      params.append('videoNumber', this.videoNumber);
+    
+      const result = await this.$http.post('/media/mediaFile/mergechunks', params, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      });
+    
       if (result.data.success) {
         this.uploadSuccess = true;
-        this.completeMessage = '上传成功！';
+        this.completeMessage = '上传成功!';
         this.completeType = 'success';
         this.totalProgress = 100;
         this.chunkProgress = 100;
         this.uploadStatusText = '上传完成';
-
+    
         // 通知父组件上传完成
         this.$emit('upload-success', result.data.data);
         this.$emit('addVideoFormVisibleClose');
       } else {
         throw new Error(result.data.message || '分块合并失败');
       }
-
+    
       this.uploadComplete = true;
       this.uploading = false;
     },

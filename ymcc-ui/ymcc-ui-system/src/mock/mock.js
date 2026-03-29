@@ -150,5 +150,9 @@ export default {
       });
     });
 
+    // 媒体文件上传相关接口 - 不 mock，直接转发到真实后端
+    mock.onPost(/\/media\/mediaFile\/.*/).passThrough();
+    mock.onGet(/\/media\/mediaFile\/.*/).passThrough();
+
   }
 };

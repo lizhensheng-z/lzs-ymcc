@@ -1,0 +1,47 @@
+server:
+  port: 10070
+spring:
+  application:
+    name: service-media  #服务名
+  servlet:
+    multipart:
+      max-file-size: 52428800  # 单个文件最大 50MB
+      max-request-size: 52428800  # 请求最大 50MB
+      enabled: true  # 启用文件上传
+  cloud: #注册到 Nacos
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+  datasource:
+    username: root
+    password: 123456
+    url: jdbc:mysql://localhost:3306/ymcc_media?useSSL=false&serverTimezone=UTC
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    type: com.alibaba.druid.pool.DruidDataSource
+
+#mybatis-plus
+mybatis-plus:
+  mapper-locations: classpath:/cn/lzs/ymcc/mapper/*.xml #加载读取 mapper.xml 文件的位置
+
+
+
+media:
+  upload-base-dir: "d:/yunClass/" #分片上传地址
+  #oad‐location: "d:/"  #合并之后的视频文件存储地址
+  ffmpeg‐path: "D:/develop/ffmpeg/bin/ffmpeg.exe" #ffmpeg视频工具安装地址
+  rtmp: "rtmp://47.103.106.227/live/" # 推流到云服务器的地址
+  play: "http://47.103.106.227:8080/live/" #播放地址
+rocketmq:
+  name-server: localhost:9876
+
+  #生产者配置
+  producer:
+    #生产者组名字
+    group: "service-media-producer"
+    # 消息最大长度 默认 1024 * 4 (4M)
+    max-message-size: 4096
+    # 发送消息超时时间，默认 3000
+    send-message-timeout: 3000
+    # 发送消息失败重试次数，默认2
+    retry-times-when-send-failed: 2
+    retry-times-when-send-async-failed: 2

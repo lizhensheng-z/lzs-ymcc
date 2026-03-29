@@ -1,0 +1,17 @@
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  profiles:
+    active: dev # dev开发 环境
+  application:
+    name: service-kill
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848 #注册中心
+      config:
+        server-addr: localhost:8848 #配置中心
+        file-extension: yaml #配置文件格式 配置后缀
+        prefix: application-kill #配置前缀 ，默认使用sring.application.name
+        group: DEFAULT_GROUP
+        namespace: 311d29ce-6a54-41df-adc5-e067946ff977 #命名空间 自定义-course
