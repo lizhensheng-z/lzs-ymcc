@@ -75,12 +75,13 @@
 				<el-form-item label="视频名称" prop="name">
 					<el-input v-model="addVideoForm.name" auto-complete="off"></el-input>
 				</el-form-item>
-				<!--				<el-form-item label="视频序号" prop="number">-->
-				<!--					<el-input v-model="addVideoForm.number" type="number" min="1" auto-complete="off"></el-input>-->
-				<!--				</el-form-item>-->
+				<el-form-item label="视频序号" prop="number">
+					<el-input v-model="addVideoForm.number" type="number" min="1" auto-complete="off"></el-input>
+				</el-form-item>
 
 				<el-form-item label="视频上传" prop="name">
 					<PartUpload v-bind="addVideoForm"
+                      :video-number="addVideoForm.number"
                       @addVideoFormVisibleClose="addVideoFormVisibleClose"></PartUpload>
 				</el-form-item>
 
