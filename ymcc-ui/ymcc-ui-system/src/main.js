@@ -15,7 +15,7 @@ import routes from './routes'
 
 // ==================== Mock 开关 ====================
 // 设置为 true 启用 mock，false 使用真实后端
-const ENABLE_MOCK = true;
+const ENABLE_MOCK = false;
 
 if (ENABLE_MOCK) {
   import('./mock').then(Mock => {

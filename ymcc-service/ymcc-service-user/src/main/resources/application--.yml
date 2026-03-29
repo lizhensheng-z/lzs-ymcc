@@ -1,0 +1,32 @@
+server:
+  port: 10040
+spring:
+  application:
+    name: service-user  #服务名
+  cloud: #注册到Nacos
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+    alibaba:
+      seata:
+        tx-service-group: fsp_tx_group #这里和file.conf中事务组名一样
+  datasource:
+    username: root
+    password: 123456
+    url: jdbc:mysql://localhost:3306/ymcc_user?useSSL=false&serverTimezone=UTC
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    type: com.alibaba.druid.pool.DruidDataSource
+  redis:
+    database: 0
+    host: 127.0.0.1
+    port: 6379
+    jedis:
+      pool:
+        max-wait: 2000ms
+        min-idle: 2
+        max-idle: 8
+seata:
+  enableAutoDataSourceProxy: false #关闭DataSource代理的自动配置，我们要手动配置
+#mybatis-plus
+mybatis-plus:
+  mapper-locations: classpath:/cn/lzs/ymcc/mapper/*.xml #加载读取mapper.xml文件的位置
