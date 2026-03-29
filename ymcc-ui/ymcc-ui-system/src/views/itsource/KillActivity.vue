@@ -159,6 +159,7 @@
 				this.listLoading = true;
 				let para = {
 					page: this.page,
+					rows: 20,
 					keyword: this.filters.keyword
 				};
 				this.$http.post("/kill/killActivity/pagelist",para).then(result=>{
@@ -181,7 +182,7 @@
 			add: function () {
 				this.addFormVisible = true;
 				for(let p in this.addForm){
-					this.addForm[p] = '';f
+					this.addForm[p] = '';
 				}
 				this.addForm.sex = -1;
 				this.addForm.age = 0;

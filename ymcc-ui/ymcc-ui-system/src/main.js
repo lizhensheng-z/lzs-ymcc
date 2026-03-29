@@ -12,8 +12,20 @@ import Vuex from 'vuex'
 //import NProgress from 'nprogress'
 //import 'nprogress/nprogress.css'
 import routes from './routes'
-// import Mock from './mock'
-// Mock.bootstrap();
+
+// ==================== Mock 开关 ====================
+// 设置为 true 启用 mock，false 使用真实后端
+const ENABLE_MOCK = true;
+
+if (ENABLE_MOCK) {
+  import('./mock').then(Mock => {
+    Mock.default.bootstrap();
+    console.log('[Mock] 已启用 Mock 服务');
+  });
+} else {
+  console.log('[Mock] 已禁用 Mock 服务，使用真实后端');
+}
+// ==================================================
 import 'font-awesome/css/font-awesome.min.css'
 //自己的样式
 //import '../src/styles/page.css'

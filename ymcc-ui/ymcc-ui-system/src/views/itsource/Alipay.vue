@@ -138,6 +138,7 @@
 				this.listLoading = true;
 				let para = {
 					page: this.page,
+					rows: 20,
 					keyword: this.filters.keyword
 				};
 				this.$http.post("/pay/alipayInfo/pagelist", para).then(result => {

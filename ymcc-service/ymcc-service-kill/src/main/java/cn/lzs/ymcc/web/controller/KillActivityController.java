@@ -44,7 +44,7 @@ public class KillActivityController {
     /**
      * 删除对象
      */
-    @RequestMapping(value="delete/{id}")
+    @PostMapping("delete/{id}")
     public JSONResult delete(@PathVariable("id") Long id){
         killActivityService.deleteById(id);
         return JSONResult.success();

@@ -139,6 +139,7 @@
 				this.listLoading = true;
 				let para = {
 					page: this.page,
+					rows: 20,
 					keyword: this.filters.keyword
 				};
 				this.$http.post("/common/messageStation/pagelist", para).then(result => {

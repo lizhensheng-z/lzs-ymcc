@@ -162,6 +162,7 @@
 				this.listLoading = true;
 				let para = {
 					page: this.page,
+					rows: 20,
 					keyword: this.filters.keyword
 				};
 				this.$http.post("/system/employee/pagelist", para).then(result => {

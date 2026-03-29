@@ -123,6 +123,7 @@
 				this.listLoading = true;
 				let para = {
 					page: this.page,
+					rows: 10,
 					keyword: this.filters.keyword
 				};
 				this.$http.post("/kill/killCourse/pagelist",para).then(result=>{
@@ -145,7 +146,7 @@
 			del: function (row) {
 				this.$confirm('确认删除该记录吗?', '提示', { type: 'warning' }).then(() => {
 					this.listLoading = true;
-					this.$http.delete("/kill/killCourse/delete/"+row.id).then(result=>{
+					this.$http.delete("/kill/killCourse/"+row.id).then(result=>{
 						let {success , data, message ,code} = result.data;
 						if(success){
 							this.$message({ message: "提交成功", type: 'success' });
@@ -183,7 +184,7 @@
 					if (valid) {
 						this.$confirm('确认提交吗？', '提示', {}).then(() => {
 							this.listLoading = true;
-							this.$http.POST("/kill/killCourse/save",this.addForm).then(result=>{
+							this.$http.post("/kill/killCourse/save",this.addForm).then(result=>{
 								let {success , data, message ,code} = result.data;
 								if(success){
 									this.$message({ message: "提交成功", type: 'success' });

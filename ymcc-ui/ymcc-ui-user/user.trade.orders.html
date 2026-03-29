@@ -794,9 +794,11 @@
 			methods: {
 				loadOrders(){
 					var _this = this;
-					_this.$http.post("/order/courseOrder/forUser",{rows:100}).then(res=>{
-						_this.datas = res.data.data.rows;
-						_this.total = res.data.data.total;
+					_this.$http.post("/order/courseOrder/pagelist",{page:1,rows:100}).then(res=>{
+						if(res.data.success){
+							_this.datas = res.data.data.rows;
+							_this.total = res.data.data.total;
+						}
 					})
 				}
 			},

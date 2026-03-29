@@ -102,6 +102,7 @@
 			getTableData() {
 				let para = {
 					page: this.page,
+					rows: 10,
 					keyword: this.filters.keyword
 				};
 				this.listLoading = true; //显示加载圈

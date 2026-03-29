@@ -153,7 +153,7 @@
             },
             getChildrenByPid(pid){
                 this.$http.get("/course/courseType/selectChildrenById/"+pid).then(res=>{
-                    this.datas = res.data.data.data;
+                    this.datas = res.data.data;
                 });
             },
             handleCurrentChange(page){
@@ -203,6 +203,7 @@
                 this.listLoading = true; //显示加载圈
                 let para = {
                     "page":this.page,
+					"rows":10,
                     "keyword":this.filters.keyword
                 };
                 //分页查询

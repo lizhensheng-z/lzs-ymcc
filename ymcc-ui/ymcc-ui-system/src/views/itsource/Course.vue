@@ -520,6 +520,7 @@
 				//添加分页条件及高级查询条件
 				let para = {
 				    "page":this.page,
+					"rows":10,
 					"keyword":this.filters.keywords
 				};
 				this.listLoading = true; //显示加载圈
