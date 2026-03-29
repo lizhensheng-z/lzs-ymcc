@@ -153,7 +153,9 @@
 				},
 				courses:[],
 				//选择章节===================
-				courseChapters:[]
+				courseChapters:[],
+				//课程弹窗分页
+				courseTotal: 0
 			}
 
 		},
@@ -170,8 +172,14 @@
 			},
 			//加载课程==============================
 			getCourses(){
-				this.$http.post("/course/course/pagelist",this.courseAddForm).then(result=>{
+				let para = {
+					page: 1,
+					rows: 10,
+					keyword: this.courseAddForm.keyword || ''
+				};
+				this.$http.post("/course/course/pagelist",para).then(result=>{
 					this.courses = result.data.data.rows;
+					this.courseTotal = result.data.data.total;
 				});
 			},
 			selectCourse(row){
@@ -205,7 +213,10 @@
 			},
 			//试看start==============================
 			handleFree(row){
-				this.$http.post("/media/mediaFile/update2Free/"+row.id).then(result=>{
+				// 设置免费试看：修改free字段后调用save接口
+				let updateData = {...row};
+				updateData.free = !row.free;
+				this.$http.post("/media/mediaFile/save",updateData).then(result=>{
 					let {success,message} = result.data;
 					if(success){
 						this.$message({
@@ -252,6 +263,7 @@
 			getTableData() {
 				let para = {
 					page: this.page,
+					rows: 10,
 					keyword: this.filters.keyword
 				};
 				this.listLoading = true; //显示加载圈
@@ -264,8 +276,106 @@
 			selsChange(sels){
 				this.sels = sels;
 			},
+			//编辑视频
+			handleEdit(row){
+				this.addVideoForm = Object.assign({}, row);
+				this.addVideoFormVisible = true;
+				//加载章节列表
+				this.getCourseChapter();
+			},
+			//删除视频
+			handleDel(row){
+				this.$confirm('确认删除该视频吗?', '提示', {
+					type: 'warning'
+				}).then(() => {
+					this.listLoading = true;
+					this.$http.delete("/media/mediaFile/" + row.id).then((res) => {
+						this.listLoading = false;
+						let ajaxResult = res.data;
+						if (ajaxResult.success) {
+							this.$message({
+								message: '删除成功',
+								type: 'success'
+							});
+							this.getTableData();
+						} else {
+							this.$message({
+								message: ajaxResult.message,
+								type: 'error'
+							});
+						}
+					});
+				}).catch(() => {
+					this.$message({
+						type: 'info',
+						message: '已取消删除'
+					});
+				});
+			},
+			//新增视频提交
+			addVideo(){
+				this.$refs.addForm.validate((valid) => {
+					if (valid) {
+						this.$confirm('确认提交吗？', '提示', {}).then(() => {
+							this.$http.post("/media/mediaFile/save",this.addVideoForm).then(result=>{
+								let {success,message} = result.data;
+								if(success){
+									this.$message({
+										message: '提交成功',
+										type: 'success'
+									});
+									this.addVideoFormVisible = false;
+									this.getTableData();
+									//重置表单
+									this.addVideoForm = {
+										chapterId:"",
+										chapterName:'',
+										courseId:'',
+										number:'',
+										videoUrl:'',
+										name:'',
+										courseName:''
+									};
+								}else{
+									this.$message({
+										message: message,
+										type: 'error'
+									});
+								}
+							});
+						});
+					}
+				});
+			},
+			//批量删除
 			batchRemove(){
-				this.$message({ message: "功能未开放", type: 'error' });
+				let ids = this.sels.map(item => item.id).join(",");
+				this.$confirm('确认删除选中记录吗？', '提示', {
+					type: 'warning'
+				}).then(() => {
+					this.listLoading = true;
+					this.$http.post("/media/mediaFile/batchRemove", { ids: ids }).then((res) => {
+						this.listLoading = false;
+						let ajaxResult = res.data;
+						if (ajaxResult.success) {
+							this.$message({
+								message: '删除成功',
+								type: 'success'
+							});
+							this.getTableData();
+						} else {
+							this.$message({
+								message: ajaxResult.message,
+								type: 'error'
+							});
+						}
+					});
+				}).catch(() => {
+					this.$message({
+						type: 'info',
+						message: '已取消删除'
+					});
+				});
 			},
 		},
 		mounted() {

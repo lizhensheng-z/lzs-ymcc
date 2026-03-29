@@ -35,8 +35,8 @@ axios.defaults.baseURL='http://localhost:10010/ymcc';
 //全局属性配置，在任意组件内可以使用this.$http获取axios对象
 Vue.prototype.$http = axios
 
-// import PartUpload from 'upload.vue'
-// Vue.component("PartUpload", PartUpload);
+import PartUpload from './components/PartUpload.vue'
+Vue.component("PartUpload", PartUpload);
 //处理Token===================================================================================================
 function toLogin(){
     alert("登录失效,请重新登录");
