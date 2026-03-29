@@ -21,6 +21,9 @@
 		<script type="text/javascript" src="js/jquery.cookie.js"></script>
 		<script type="text/javascript" src="js/common1.js"></script>
 		<script type="text/javascript" src="js/user.js"></script>
+	<script type="text/javascript" src="js/plugins/vue/dist/vue.js"></script>
+	<script type="text/javascript" src="js/plugins/axios/dist/axios.js"></script>
+	<script src="/js/axios.common.js"></script>
 	</head>
 
 	<body>
@@ -190,7 +193,7 @@
 				
 				<a href="javascript:add()">新增收货地址</a>
 				
-				<span>（已保存了2条地址，还能保存18条地址）</span>
+				<span>（已保存了{{addressList.length}}条地址，还能保存{{20 - addressList.length}}条地址）</span>
 			</h2>
 								<div id="edit-address-div">
 									<form id="UserAddressModel" class="form-horizontal" name="UserAddressModel" action="http://user.ymcc.com/user/address/add.html" method="post" novalidate="novalidate">
@@ -353,49 +356,25 @@
 													<th class="address-default">&nbsp;</th>
 												</tr>
 
-												<tr style="background: rgb(255, 255, 255);">
-
-													<td align="center">张女士</td>
-													<td align="left">四川省 成都市 武侯区</td>
-													<td align="left">红牌楼小翠小区12-1-305</td>
-													<td align="center">
-														<p>13980728870</p>
-														<p></p>
-													</td>
-													<td align="center">-- --</td>
-													<td align="center">
-														<a class="address-oprate" href="javascript:edit(571)">修改</a>
-														<span class="line">|</span>
-														<a class="address-oprate" href="javascript:del(571)">删除</a>
-													</td>
-													<td align="center">
-
-														<a class="note" href="javascript:set_default(571)" style="display: none;">设为默认</a>
-
-													</td>
-												</tr>
-
-												<tr class="address-default" style="background: rgb(255, 255, 255);">
-
-													<td align="center">李先生</td>
-													<td align="left">四川省 成都市 郫县</td>
-													<td align="left">犀浦镇龙腾小区5-1-2</td>
-													<td align="center">
-														<p>13980728872</p>
-														<p></p>
-													</td>
-													<td align="center">-- --</td>
-													<td align="center">
-														<a class="address-oprate" href="javascript:edit(570)">修改</a>
-														<span class="line">|</span>
-														<a class="address-oprate" href="javascript:del(570)">删除</a>
-													</td>
-													<td align="center">
-
-														<span class="note">默认地址</span>
-
-													</td>
-												</tr>
+												<tr v-for="addr in addressList" :key="addr.id" :class="{'address-default': addr.isDefault == 1}" style="background: rgb(255, 255, 255);">
+														<td align="center">{{addr.consignee}}</td>
+														<td align="left">{{addr.regionName}}</td>
+														<td align="left">{{addr.addressDetail}}</td>
+														<td align="center">
+															<p>{{addr.mobile}}</p>
+															<p>{{addr.tel || ''}}</p>
+														</td>
+														<td align="center">{{addr.email || '-- --'}}</td>
+														<td align="center">
+															<a class="address-oprate" href="#" @click.prevent="editAddress(addr.id)">修改</a>
+															<span class="line">|</span>
+															<a class="address-oprate" href="#" @click.prevent="deleteAddress(addr.id)">删除</a>
+														</td>
+														<td align="center">
+															<a v-if="addr.isDefault != 1" class="note" href="#" @click.prevent="setDefault(addr.id)">设为默认</a>
+															<span v-else class="note">默认地址</span>
+														</td>
+													</tr>
 
 											</tbody>
 										</table>
@@ -454,5 +433,65 @@
 		</div>
 		<script type="text/javascript" src="js/jquery.fly.min.js"></script>
 	</body>
-
+	<script type="text/javascript">
+		$().ready(function() {
+			new Vue({
+				el: "#content",
+				data() {
+					return {
+						addressList: []
+					}
+				},
+				methods: {
+					loadAddressList() {
+						this.$http.get("/user/address/list").then(res => {
+							let { success, message, data } = res.data;
+							if (success && data) {
+								this.addressList = data;
+							}
+						}).catch(error => {
+							console.log("加载地址列表失败", error);
+						});
+					},
+					setDefault(id) {
+						$.ajax({
+							type: 'GET',
+							url: '/user/address/set-default',
+							data: { address_id: id },
+							dataType: 'json',
+							success: (result) => {
+								$.msg(result.message);
+								if (result.code == 0) {
+									this.loadAddressList();
+								}
+							}
+						});
+					},
+					deleteAddress(id) {
+						$.confirm("您确定要删除此收货地址吗？", () => {
+							$.ajax({
+								type: 'GET',
+								url: '/user/address/del',
+								data: { address_id: id },
+								dataType: 'json',
+								success: (result) => {
+									$.msg(result.message);
+									if (result.code == 0) {
+										this.loadAddressList();
+									}
+								}
+							});
+						});
+					},
+					editAddress(id) {
+						// 调用原有的edit函数
+						edit(id);
+					}
+				},
+				mounted() {
+					this.loadAddressList();
+				}
+			});
+		});
+	</script>
 	</html>

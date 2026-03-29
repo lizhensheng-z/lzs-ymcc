@@ -23,6 +23,9 @@
 		<script type="text/javascript" src="js/user.js"></script>
 		<link rel="stylesheet" href="js/jqueryAlert/alert.css">
 		<script src="js/jqueryAlert/alert.js"></script>
+		<script type="text/javascript" src="js/plugins/vue/dist/vue.js"></script>
+		<script type="text/javascript" src="js/plugins/axios/dist/axios.js"></script>
+		<script src="/js/axios.common.js"></script>
 	</head>
 
 	<body>
@@ -232,17 +235,17 @@
 								<div class="use-detail clearfix">
 									<span class="fl">
 					可提现资金：
-					<strong class="second-color">0.00</strong>
+					<strong class="second-color">{{accountInfo.withdrawable}}</strong>
 					元
 				</span>
 									<span class="fl">
 					不可提现资金：
-					<strong class="second-color">0.00</strong>
+					<strong class="second-color">{{accountInfo.nonWithdrawable}}</strong>
 					元
 				</span>
 									<span class="fl">
 					冻结资金：
-					<strong class="second-color">0.00</strong>
+					<strong class="second-color">{{accountInfo.frozen}}</strong>
 					元
 				</span>
 								</div>
@@ -365,5 +368,49 @@
 		</div>
 		<script type="text/javascript" src="js/jquery.fly.min.js"></script>
 	</body>
-
+	<script type="text/javascript">
+		$().ready(function() {
+			new Vue({
+				el: "#content",
+				data() {
+					return {
+						accountInfo: {
+							withdrawable: '0.00',
+							nonWithdrawable: '0.00',
+							frozen: '0.00'
+						},
+						transactionList: []
+					}
+				},
+				methods: {
+					loadAccountInfo() {
+						this.$http.get("/user/account/balance").then(res => {
+							let { success, message, data } = res.data;
+							if (success && data) {
+								this.accountInfo.withdrawable = data.withdrawable || '0.00';
+								this.accountInfo.nonWithdrawable = data.nonWithdrawable || '0.00';
+								this.accountInfo.frozen = data.frozen || '0.00';
+							}
+						}).catch(error => {
+							console.log("加载账户信息失败", error);
+						});
+					},
+					loadTransactions() {
+						this.$http.get("/user/account/transactions").then(res => {
+							let { success, message, data } = res.data;
+							if (success && data) {
+								this.transactionList = data;
+							}
+						}).catch(error => {
+							console.log("加载交易记录失败", error);
+						});
+					}
+				},
+				mounted() {
+					this.loadAccountInfo();
+					this.loadTransactions();
+				}
+			});
+		});
+	</script>
 	</html>

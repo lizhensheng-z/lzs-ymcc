@@ -202,7 +202,7 @@
 					<p>
 						<span>
 							我的成长值：
-							<a href="http://user.ymcc.com/user/growth-value" class="second-color" target="_self">0</a>
+							<a href="http://user.ymcc.com/user/growth-value" class="second-color" target="_self">{{userInfo.growthValue}}</a>
 						</span>
 												<span>
 							再积累
@@ -235,7 +235,7 @@
 				<div class="imgHeaderBox">
 					<a href="" class="headerImg">
 
-						<img src="img/default_user_portrait_0.png">
+						<img :src="userInfo.headImg">
 
 					</a>
 					<div class="updateInfo">
@@ -246,9 +246,9 @@
 				<p class="name">
 					<a href="">
 
-						
-						SZY083SDPF5239
-						
+
+						{{userInfo.username}}
+
 
 					</a>
 				</p>
@@ -256,7 +256,7 @@
 					<a href="http://user.ymcc.com/user/growth-value.html" target="_blank" class="imgVip imgVip1">
 						<img src="img/14788627664630.gif">
 					</a>
-					<a href="http://user.ymcc.com/user/growth-value.html" target="_blank" class="txtExplain">初级会员一级</a>
+					<a href="http://user.ymcc.com/user/growth-value.html" target="_blank" class="txtExplain">{{userInfo.levelName}}</a>
 				</p>
 				<a href="http://user.ymcc.com/user.my.account.secret.html" class="safeText">账户安全</a>
 				<span class="safeGrade">低</span>
@@ -305,7 +305,7 @@
 							<!-- <a href="javascript:show_surplus(1061)">
 								<span id="surplus_div">显示余额</span>
 							</a> -->
-							<a href="http://user.ymcc.com/user/capital-account.html">0</a>
+							<a href="http://user.ymcc.com/user/capital-account.html">{{userInfo.balance || 0}}</a>
 						</p>
 					</li>
 					<li class="second">
@@ -319,7 +319,7 @@
 						</div>
 						<p>
 
-							<a href="http://user.ymcc.com/user/growth-value.html">0</a>
+							<a href="http://user.ymcc.com/user/growth-value.html">{{userInfo.growthValue}}</a>
 						</p>
 					</li>
 					<li class="third">
@@ -653,11 +653,21 @@
 				data(){
 					return {
 						//数据统计
-						orderNumber:10,
-						courseNumber:10,
-						collectNumber:10,
-						commentNumber:10,
-						courseList:[]
+						orderNumber:0,
+						courseNumber:0,
+						collectNumber:0,
+						commentNumber:0,
+						courseList:[],
+						// 用户信息
+						userInfo: {
+							username: '',
+							headImg: 'img/default_user_portrait_0.png',
+							growthValue: 0,
+							levelName: '初级会员一级',
+							email: '',
+							phone: '',
+							balance: 0
+						}
 					}
 				},
 				methods:{
@@ -673,10 +683,41 @@
 						}).catch(error => {
 							$.alert("课程加载失败["+error.message+"]");
 						});
+					},
+					// 加载用户信息
+					loadUserInfo(){
+						this.$http.get("/user/user/current").then(res=>{
+							let {success, message, data} = res.data;
+							if(success && data){
+								this.userInfo = {
+									username: data.username || data.phone || '用户',
+									headImg: data.headImg || 'img/default_user_portrait_0.png',
+									growthValue: data.growthValue || 0,
+									levelName: data.levelName || '初级会员一级',
+									email: data.email || '',
+									phone: data.phone || ''
+								};
+							}
+						}).catch(error => {
+							console.log("加载用户信息失败", error);
+						});
+					},
+					// 加载统计数据
+					loadStatistics(){
+						// 订单数量
+						this.$http.post("/order/courseOrder/pagelist", {page:1, rows:1}).then(res=>{
+							if(res.data.success){
+								this.orderNumber = res.data.data.total || 0;
+							}
+						});
+						// 收藏数量 - 如果有接口的话
+						// this.$http.get("/user/collect/count").then(...);
 					}
 				},
 				mounted(){
 					this.loadCourseList();
+					this.loadUserInfo();
+					this.loadStatistics();
 				}
 			});
 		});

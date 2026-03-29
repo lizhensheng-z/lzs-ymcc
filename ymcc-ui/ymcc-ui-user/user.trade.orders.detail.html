@@ -337,7 +337,7 @@
 																		type: 'GET',
 																		url: '/user/order/cancel-sys',
 																		data: {
-																			order_id: 1080
+																			order_id: orderId
 																		},
 																		dataType: 'json',
 																		success: function(data) {
@@ -595,6 +595,26 @@
 			</div>
 		</div>
 		<script type="text/javascript" src="js/jquery.fly.min.js"></script>
+		<script type="text/javascript" src="js/plugins/vue/dist/vue.js"></script>
+		<script type="text/javascript" src="js/plugins/axios/dist/axios.js"></script>
+		<script type="text/javascript" src="js/axios.common.js"></script>
+		<script type="application/javascript">
+			// 从URL获取订单ID
+			function getQueryVariable(variable) {
+				var query = window.location.search.substring(1);
+				var vars = query.split("&");
+				for (var i = 0; i < vars.length; i++) {
+					var pair = vars[i].split("=");
+					if (pair[0] == variable) { return pair[1]; }
+				}
+				return false;
+			}
+
+			var orderId = getQueryVariable('order_id') || getQueryVariable('id');
+			if (!orderId) {
+				layer.alert('订单ID不能为空', { icon: 2 });
+			}
+		</script>
 	</body>
 
 	</html>

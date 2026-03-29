@@ -21,6 +21,9 @@
 		<script type="text/javascript" src="js/jquery.cookie.js"></script>
 		<script type="text/javascript" src="js/common1.js"></script>
 		<script type="text/javascript" src="js/user.js"></script>
+	<script type="text/javascript" src="js/plugins/vue/dist/vue.js"></script>
+	<script type="text/javascript" src="js/plugins/axios/dist/axios.js"></script>
+	<script src="/js/axios.common.js"></script>
 	</head>
 
 	<body>
@@ -208,14 +211,14 @@
 					<span>当前头像：</span>
 				</label>
 										<div class="profile-avatar">
-											<img id="headimg" src="img/14865372927544.png" width="120" height="120">
+											<img id="headimg" :src="userInfo.headImg" width="120" height="120">
 										</div>
 									</div>
 									<div class="form-group form-group-spe">
 										<label class="input-left">
 					<span>会员名称：</span>
 				</label>
-										<span class="input-none">SZY083SDPF5239</span>
+										<span class="input-none">{{userInfo.username}}</span>
 									</div>
 
 									<!-- 会员昵称 -->
@@ -226,7 +229,7 @@
 </label>
 										<div class="form-control-box">
 
-											<input type="text" id="usermodel-nickname" class="form-control" name="UserModel[nickname]" aria-required="true">
+											<input type="text" id="usermodel-nickname" class="form-control" name="UserModel[nickname]" v-model="userInfo.nickname" aria-required="true">
 
 										</div>
 
@@ -237,11 +240,11 @@
 					<span>会员等级：</span>
 				</label>
 										<span class="input-none">
-					初级会员一级
+					{{userInfo.levelName}}
 					<span>
 						我的成长值：
 
-						<font class="second-color">0</font>
+						<font class="second-color">{{userInfo.growthValue}}</font>
 					</span>
 										<span>
 						再积累
@@ -303,7 +306,7 @@
 </label>
 										<div class="form-control-box">
 
-											<textarea id="usermodel-detail_address" class="form-control" name="UserModel[detail_address]" rows="5" placeholder="建议您如实填写详细收货地址，例如街道名称，门牌号码，楼层和房间号等信息"></textarea>
+											<textarea id="usermodel-detail_address" class="form-control" name="UserModel[detail_address]" v-model="userInfo.detailAddress" rows="5" placeholder="建议您如实填写详细收货地址，例如街道名称，门牌号码，楼层和房间号等信息"></textarea>
 
 										</div>
 
@@ -1248,7 +1251,25 @@
 								}
 								//加载提示
 								$.loading.start();
-								$("#UserModel").submit();
+								// AJAX提交
+								var formData = {
+									nickname: $("#usermodel-nickname").val(),
+									sex: $("input[name='UserModel[sex]']:checked").val(),
+									detail_address: $("#usermodel-detail_address").val(),
+									birthday: $("#birthday").val(),
+									address_code: $("#address_code").val()
+								};
+								$.post('/user/user/profile', formData, function(result) {
+									$.loading.stop();
+									if(result.success) {
+										$.msg("保存成功");
+									} else {
+										$.msg(result.message || "保存失败");
+									}
+								}, "json").fail(function() {
+									$.loading.stop();
+									$.msg("保存失败，请稍后重试");
+								});
 							});
 							var validator_real = $("#UserRealModel").validate();
 							// 验证规则，此验证规则会影响编辑器中JavaScript的的格式化操作
@@ -1425,5 +1446,51 @@
 		</div>
 		<script type="text/javascript" src="js/jquery.fly.min.js"></script>
 	</body>
-
+	<script type="text/javascript">
+		$().ready(function() {
+			new Vue({
+				el: "#content",
+				data() {
+					return {
+						userInfo: {
+							username: '',
+							headImg: 'img/default_user_portrait_0.png',
+							nickname: '',
+							growthValue: 0,
+							levelName: '初级会员一级',
+							detailAddress: '',
+							sex: '0'
+						}
+					}
+				},
+				methods: {
+					loadUserInfo() {
+						this.$http.get("/user/user/current").then(res => {
+							let { success, message, data } = res.data;
+							if (success && data) {
+								this.userInfo.username = data.username || data.phone || '用户';
+								this.userInfo.headImg = data.headImg || 'img/default_user_portrait_0.png';
+								this.userInfo.nickname = data.nickname || '';
+								this.userInfo.growthValue = data.growthValue || 0;
+								this.userInfo.levelName = data.levelName || '初级会员一级';
+								this.userInfo.detailAddress = data.detailAddress || '';
+								this.userInfo.sex = (data.sex || 0).toString();
+								// 设置性别单选框
+								$("input[name='UserModel[sex]'][value='" + this.userInfo.sex + "']").prop('checked', true);
+								// 设置昵称
+								$("#usermodel-nickname").val(this.userInfo.nickname);
+								// 设置详细地址
+								$("#usermodel-detail_address").val(this.userInfo.detailAddress);
+							}
+						}).catch(error => {
+							console.log("加载用户信息失败", error);
+						});
+					}
+				},
+				mounted() {
+					this.loadUserInfo();
+				}
+			});
+		});
+	</script>
 	</html>

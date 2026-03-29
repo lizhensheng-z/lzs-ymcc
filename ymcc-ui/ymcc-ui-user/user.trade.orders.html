@@ -382,7 +382,7 @@
 														<div class="operate">
 															<p class="confirm-receipt-time" v-if="data.statusOrder == 0">
 																还剩
-																<span id="counter_1080">06 天 23 小时 55 分 00 秒</span>
+																<span :id="'counter_' + data.id">06 天 23 小时 55 分 00 秒</span>
 															</p>
 															<a :href="'http://127.0.0.1:6002/order.confirm.html?courseId='+data.courseId"
 															   target="_blank" class="on-payment" v-if="data.statusOrder == 0">立即付款</a>
@@ -399,7 +399,7 @@
 																			type: 'GET',
 																			url: '/user/order/cancel-sys',
 																			data: {
-																				order_id: 1080
+																				order_id: data.id
 																			},
 																			dataType: 'json',
 																			success: function(data) {
@@ -416,7 +416,7 @@
 														</script>
 
 														<div class="operate">
-															<a class="cancel-payment edit-order" data-id="1080" data-type="cancel" v-if="data.statusOrder == 0">取消订单</a>
+															<a class="cancel-payment edit-order" :data-id="data.id" data-type="cancel" v-if="data.statusOrder == 0">取消订单</a>
 														</div>
 
 														<div class="operate">
@@ -683,7 +683,7 @@
 
 							for(var i = 0; i < order_ids.length; i++) {
 								if(order_ids[i].checked == true) {
-									order_id[i] = order_ids[i].value;
+									order_id.push(order_ids[i].value);
 								}
 							}
 
@@ -692,61 +692,44 @@
 								return false;
 							}
 
-							$.loading.start();
-							$.ajax({
-								type: 'POST',
-								url: '/user/order/delete.html',
-								data: {
-									order_id: order_id,
-									type: 3,
-								},
-								dataType: 'json',
-								success: function(data) {
-									$.loading.stop();
+							var text = "";
+							var url = "/user/order/list.html";
+							if(type == 2) {
+								text = "您确定要批量彻底删除这些订单吗？";
+								url += "?is_delete=1";
+							} else if(type == 1) {
+								text = "您确定要批量删除这些订单吗？";
+							} else {
+								text = "您确定要批量还原这些订单吗？";
+								url += "?is_delete=1";
+							}
 
-									var text = "";
-									var url = "/user/order/list.html";
-									if(type == 2) {
-										text = "您确定要批量彻底删除这些订单吗？";
-										url += "?is_delete=1";
-									} else if(type == 1) {
-										text = data.message;
-									} else {
-										text = "您确定要批量还原这些订单吗？";
-										url += "?is_delete=1";
-									}
+							layer.alert(text, {
+								icon: 3,
+								skin: 'layer-ext-moon',
+								btn: ['确定', '取消']
+							}, function(index) {
+								layer.close(index);
+								$.loading.start();
+								$.ajax({
+									type: 'POST',
+									url: '/user/order/delete.html',
+									data: {
+										order_id: order_id,
+										type: type,
+									},
+									dataType: 'json',
+									success: function(data) {
+										$.loading.stop();
+										$.msg(data.message);
 
-									layer.alert(text, {
-										icon: 3,
-										skin: 'layer-ext-moon',
-										btn: ['确定', '取消']
-									}, function(index) {
 										if(data.code == 0) {
-											$.loading.start();
-											$.ajax({
-												type: 'POST',
-												url: '/user/order/delete.html',
-												data: {
-													order_id: order_id,
-													type: type,
-												},
-												dataType: 'json',
-												success: function(data) {
-													$.loading.stop();
-													$.msg(data.message);
-
-													if(data.code == 0) {
-														$.go(url);
-													}
-												}
-											});
-										} else {
-											layer.close(index);
+											$.go(url);
 										}
-									}, function(index) {
-										layer.close(index);
-									});
-								}
+									}
+								});
+							}, function(index) {
+								layer.close(index);
 							});
 						}
 					</script>

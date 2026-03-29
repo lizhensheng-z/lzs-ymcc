@@ -21,6 +21,9 @@
 		<script type="text/javascript" src="js/jquery.cookie.js"></script>
 		<script type="text/javascript" src="js/common1.js"></script>
 		<script type="text/javascript" src="js/user.js"></script>
+	<script type="text/javascript" src="js/plugins/vue/dist/vue.js"></script>
+	<script type="text/javascript" src="js/plugins/axios/dist/axios.js"></script>
+	<script src="/js/axios.common.js"></script>
 	</head>
 
 	<body>
@@ -197,16 +200,16 @@
 								<div class="user-tab-right">
 									<span>
 					我的成长值：
-					<font class="second-color">0</font>
+					<font class="second-color">{{growthInfo.value}}</font>
 				</span>
 									<span>
 					会员级别：
-					<font class="second-color">初级会员一级</font>
+					<font class="second-color">{{growthInfo.levelName}}</font>
 				</span>
 									<span>
 					再积累
-					<font class="second-color">2</font>
-					成长值可升级初级会员二级
+					<font class="second-color">{{growthInfo.needForUpgrade}}</font>
+					成长值可升级{{growthInfo.nextLevelName}}
 				</span>
 								</div>
 							</div>
@@ -494,5 +497,51 @@
 		</div>
 		<script type="text/javascript" src="js/jquery.fly.min.js"></script>
 	</body>
-
+	<script type="text/javascript">
+		$().ready(function() {
+			new Vue({
+				el: "#content",
+				data() {
+					return {
+						growthInfo: {
+							value: 0,
+							levelName: '初级会员一级',
+							needForUpgrade: 2,
+							nextLevelName: '初级会员二级'
+						},
+						growthList: []
+					}
+				},
+				methods: {
+					loadGrowthInfo() {
+						this.$http.get("/user/user/current").then(res => {
+							let { success, message, data } = res.data;
+							if (success && data) {
+								this.growthInfo.value = data.growthValue || 0;
+								this.growthInfo.levelName = data.levelName || '初级会员一级';
+								this.growthInfo.needForUpgrade = data.needForUpgrade || 2;
+								this.growthInfo.nextLevelName = data.nextLevelName || '初级会员二级';
+							}
+						}).catch(error => {
+							console.log("加载成长值信息失败", error);
+						});
+					},
+					loadGrowthList() {
+						this.$http.get("/user/growth/list").then(res => {
+							let { success, message, data } = res.data;
+							if (success && data) {
+								this.growthList = data;
+							}
+						}).catch(error => {
+							console.log("加载成长值记录失败", error);
+						});
+					}
+				},
+				mounted() {
+					this.loadGrowthInfo();
+					this.loadGrowthList();
+				}
+			});
+		});
+	</script>
 	</html>

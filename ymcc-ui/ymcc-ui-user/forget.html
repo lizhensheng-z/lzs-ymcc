@@ -147,7 +147,26 @@
 			if (!validator.form()) {
 				return;
 			}
-			$("#AccountModel").submit();
+			// AJAX提交
+			var formData = {
+				username: $("#accountmodel-username").val(),
+				captcha: $("#accountmodel-captcha").val()
+			};
+			$.post('/user/find-password', formData, function(result) {
+				if(result.code == 0) {
+					$.msg("验证成功，请进行下一步");
+					// 跳转到下一步验证身份
+					setTimeout(function() {
+						window.location.href = '/user/find-password-verify.html';
+					}, 1000);
+				} else {
+					$.msg(result.message || "验证失败");
+					// 刷新验证码
+					$("#captcha-image").click();
+				}
+			}, "json").fail(function() {
+				$.msg("提交失败，请稍后重试");
+			});
 		});
 	});
 </script>
