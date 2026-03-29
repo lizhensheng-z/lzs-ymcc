@@ -9,7 +9,7 @@ import CourseType from './views/itsource/CourseType.vue'
 import CourseChapter from './views/itsource/CourseChapter.vue'
 import Department from './views/itsource/department.vue'
 import Course from './views/itsource/Course.vue'
-import Pager from './views/itsource/Pager.vue'
+// import Pager from './views/itsource/Pager.vue'
 import Role from './views/itsource/role.vue'
 import echarts from './views/charts/echarts.vue'
 import Teacher from './views/itsource/Teacher.vue'
@@ -134,16 +134,16 @@ let routes = [
 
         ]
     },
-    {
-        path: '/',
-        component: Home,
-        name: '页面管理',
-        iconCls: 'el-icon-s-home',
-        children: [
-            { path: '/pager', component: Pager, name: '静态化页面管理' },
-            { path: '/site', component: Pager, name: '站点管理' }
-        ]
-    },
+//    {
+//        path: '/',
+//        component: Home,
+//        name: '页面管理',
+//        iconCls: 'el-icon-s-home',
+//        children: [
+//            { path: '/pager', component: Pager, name: '静态化页面管理' },
+//            { path: '/site', component: Pager, name: '站点管理' }
+//        ]
+//    },
 
     {
         path: '*',

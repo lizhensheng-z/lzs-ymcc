@@ -75,7 +75,7 @@
 	export default {
 		data() {
 			return {
-				sysName:'源码云课堂管理',
+				sysName:'IT学习云平台管理',
 				collapsed:false,
 				sysUserName: '',
 				sysUserAvatar: 'https://img2.baidu.com/it/u=3309676100,432266439&fm=26&fmt=auto&gp=0.jpg',
