@@ -21,6 +21,9 @@
 		<script type="text/javascript" src="js/jquery.cookie.js"></script>
 		<script type="text/javascript" src="js/common1.js"></script>
 		<script type="text/javascript" src="js/user.js"></script>
+	<script type="text/javascript" src="js/plugins/vue/dist/vue.js"></script>
+	<script type="text/javascript" src="js/plugins/axios/dist/axios.js"></script>
+	<script src="/js/axios.common.js"></script>
 	</head>
 
 	<body>
@@ -339,6 +342,35 @@
 			</div>
 		</div>
 		<script type="text/javascript" src="js/jquery.fly.min.js"></script>
+	<script type="text/javascript">
+		$().ready(function() {
+			new Vue({
+				el: "#content",
+				data() {
+					return {
+						rechargeList: [],
+						balance: '0.00'
+					}
+				},
+				methods: {
+					loadRechargeRecords() {
+						this.$http.get("/user/account/recharge/records").then(res => {
+							let { success, message, data } = res.data;
+							if (success && data) {
+								this.rechargeList = data.list || [];
+								this.balance = data.balance || '0.00';
+							}
+						}).catch(error => {
+							console.log("加载充值记录失败", error);
+						});
+					}
+				},
+				mounted() {
+					this.loadRechargeRecords();
+				}
+			});
+		});
+	</script>
 	</body>
 
 	</html>

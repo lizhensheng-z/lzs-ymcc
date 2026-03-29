@@ -21,6 +21,9 @@
 		<script type="text/javascript" src="js/jquery.cookie.js"></script>
 		<script type="text/javascript" src="js/common1.js"></script>
 		<script type="text/javascript" src="js/user.js"></script>
+	<script type="text/javascript" src="js/plugins/vue/dist/vue.js"></script>
+	<script type="text/javascript" src="js/plugins/axios/dist/axios.js"></script>
+	<script src="/js/axios.common.js"></script>
 	</head>
 
 	<body>
@@ -272,6 +275,33 @@
 			</div>
 		</div>
 		<script type="text/javascript" src="js/jquery.fly.min.js"></script>
+	<script type="text/javascript">
+		$().ready(function() {
+			new Vue({
+				el: "#content",
+				data() {
+					return {
+						commentList: []
+					}
+				},
+				methods: {
+					loadComments() {
+						this.$http.get("/user/comment/list").then(res => {
+							let { success, message, data } = res.data;
+							if (success && data) {
+								this.commentList = data;
+							}
+						}).catch(error => {
+							console.log("加载评价列表失败", error);
+						});
+					}
+				},
+				mounted() {
+					this.loadComments();
+				}
+			});
+		});
+	</script>
 	</body>
 
 	</html>

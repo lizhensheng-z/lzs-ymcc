@@ -21,6 +21,9 @@
 		<script type="text/javascript" src="js/jquery.cookie.js"></script>
 		<script type="text/javascript" src="js/common1.js"></script>
 		<script type="text/javascript" src="js/user.js"></script>
+	<script type="text/javascript" src="js/plugins/vue/dist/vue.js"></script>
+	<script type="text/javascript" src="js/plugins/axios/dist/axios.js"></script>
+	<script src="/js/axios.common.js"></script>
 	</head>
 
 	<body>
@@ -258,5 +261,45 @@
 		</div>
 		<script type="text/javascript" src="js/jquery.fly.min.js"></script>
 	</body>
-
+	<script type="text/javascript">
+		$().ready(function() {
+			new Vue({
+				el: "#content",
+				data() {
+					return {
+						pointsInfo: {
+							balance: 0
+						},
+						pointsList: []
+					}
+				},
+				methods: {
+					loadPointsInfo() {
+						this.$http.get("/user/account/points").then(res => {
+							let { success, message, data } = res.data;
+							if (success && data) {
+								this.pointsInfo.balance = data.balance || 0;
+							}
+						}).catch(error => {
+							console.log("加载积分信息失败", error);
+						});
+					},
+					loadPointsList() {
+						this.$http.get("/user/points/list").then(res => {
+							let { success, message, data } = res.data;
+							if (success && data) {
+								this.pointsList = data;
+							}
+						}).catch(error => {
+							console.log("加载积分记录失败", error);
+						});
+					}
+				},
+				mounted() {
+					this.loadPointsInfo();
+					this.loadPointsList();
+				}
+			});
+		});
+	</script>
 	</html>

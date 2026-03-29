@@ -21,6 +21,9 @@
 		<script type="text/javascript" src="js/jquery.cookie.js"></script>
 		<script type="text/javascript" src="js/common1.js"></script>
 		<script type="text/javascript" src="js/user.js"></script>
+	<script type="text/javascript" src="js/plugins/vue/dist/vue.js"></script>
+	<script type="text/javascript" src="js/plugins/axios/dist/axios.js"></script>
+	<script src="/js/axios.common.js"></script>
 	</head>
 
 	<body>
@@ -292,6 +295,42 @@
 			</div>
 		</div>
 		<script type="text/javascript" src="js/jquery.fly.min.js"></script>
+	<script type="text/javascript">
+		$().ready(function() {
+			new Vue({
+				el: "#content",
+				data() {
+					return {
+						messageList: [],
+						unreadCount: 0
+					}
+				},
+				methods: {
+					loadMessages() {
+						this.$http.get("/user/message/list").then(res => {
+							let { success, message, data } = res.data;
+							if (success && data) {
+								this.messageList = data.list || [];
+								this.unreadCount = data.unreadCount || 0;
+							}
+						}).catch(error => {
+							console.log("加载消息列表失败", error);
+						});
+					},
+					markAsRead(id) {
+						this.$http.post("/user/message/read", { id: id }).then(res => {
+							if (res.data.success) {
+								this.loadMessages();
+							}
+						});
+					}
+				},
+				mounted() {
+					this.loadMessages();
+				}
+			});
+		});
+	</script>
 	</body>
 
 	</html>
