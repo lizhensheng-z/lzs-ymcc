@@ -130,7 +130,7 @@ public class CourseTypeServiceImpl extends ServiceImpl<CourseTypeMapper, CourseT
         List<CourseType> firstCourseTypes = new ArrayList<>();
 
         for (CourseType courseTypeTmp : allCourseTypes) {
-            if (courseTypeTmp.getPid() == 0 || courseTypeTmp.getPid() == null) {
+            if (courseTypeTmp.getPid() == null || courseTypeTmp.getPid() == 0L) {
                 firstCourseTypes.add(courseTypeTmp);
             } else {
                 CourseType parent = allCourseTypeMap.get(courseTypeTmp.getPid());
