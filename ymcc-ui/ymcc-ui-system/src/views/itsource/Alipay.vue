@@ -33,7 +33,7 @@
 			</el-table-column>
 			<el-table-column prop="returnUrl" label="同步跳转地址" width="200" sortable>
 			</el-table-column>
-			<el-table-column prop="crateTime" label="创建时间" width="160" sortable>
+			<el-table-column prop="createTime" label="创建时间" width="160" sortable>
 			</el-table-column>
 			<el-table-column label="操作" width="200">
 				<template scope="scope">

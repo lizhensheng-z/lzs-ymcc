@@ -174,7 +174,7 @@
 					if (valid) {
 						this.$confirm('确认提交吗？', '提示', {}).then(() => {
 							this.listLoading = true;
-							this.$http.POST("/system/systemdictionaryitem/save",this.addForm).then(result=>{
+							this.$http.post("/system/systemdictionaryitem/save",this.addForm).then(result=>{
 								let {success , data, message ,code} = result.data;
 								if(success){
 									this.$message({ message: "提交成功", type: 'success' });
@@ -198,7 +198,7 @@
 				var ids = this.sels.map(item => item.id);
 				this.$confirm('确认删除选中记录吗？', '提示', { type: 'warning' }).then(() => {
 					this.listLoading = true;
-					this.$http.delete("/system/systemdictionaryitem/batch",ids).then(result=>{
+					this.$http.post("/system/systemdictionaryitem/batchRemove",{ids:ids}).then(result=>{
 						let {success , data, message ,code} = result.data;
 						if(success){
 							this.$message({ message: "提交成功", type: 'success' });

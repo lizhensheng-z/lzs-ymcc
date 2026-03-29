@@ -116,17 +116,61 @@
 
 				})
 			},
-			edit(){
-				this.$message({ message: "功能未开放", type: 'error' });
+			// 查看订单详情（编辑按钮改为查看）
+			edit(row){
+				this.$message({ message: "订单详情查看功能开发中", type: 'info' });
+				console.log("查看订单详情:", row);
 			},
-			del(){
-				this.$message({ message: "功能未开放", type: 'error' });
+			// 删除订单
+			del(row){
+				this.$confirm('确认删除该订单吗? 删除后不可恢复！', '警告', {
+					type: 'warning'
+				}).then(() => {
+					this.listLoading = true;
+					this.$http.delete("/order/courseOrder/" + row.id).then(res => {
+						this.listLoading = false;
+						let {success, message} = res.data;
+						if(success){
+							this.$message({ message: '删除成功', type: 'success' });
+							this.getTableData();
+						}else{
+							this.$message({ message: '删除失败[' + message + ']', type: 'error' });
+						}
+					}).catch(error => {
+						this.listLoading = false;
+						this.$message({ message: '删除失败[' + error.message + ']', type: 'error' });
+					});
+				}).catch(() => {
+					this.$message({ type: 'info', message: '已取消删除' });
+				});
 			},
+			// 批量删除订单
 			batchRemove(){
-				this.$message({ message: "功能未开放", type: 'error' });
+				let ids = this.sels.map(item => item.id).join(",");
+				this.$confirm('确认删除选中订单吗? 删除后不可恢复！', '警告', {
+					type: 'warning'
+				}).then(() => {
+					this.listLoading = true;
+					this.$http.post("/order/courseOrder/batchRemove", {ids: ids}).then(res => {
+						this.listLoading = false;
+						let {success, message} = res.data;
+						if(success){
+							this.$message({ message: '批量删除成功', type: 'success' });
+							this.getTableData();
+						}else{
+							this.$message({ message: '批量删除失败[' + message + ']', type: 'error' });
+						}
+					}).catch(error => {
+						this.listLoading = false;
+						this.$message({ message: '批量删除失败[' + error.message + ']', type: 'error' });
+					});
+				}).catch(() => {
+					this.$message({ type: 'info', message: '已取消删除' });
+				});
 			},
+			// 新增订单（订单通常由用户下单生成，管理端一般不需要新增）
 			addTeacher(){
-				this.$message({ message: "功能未开放", type: 'error' });
+				this.$message({ message: "订单由用户端下单生成，管理端不支持手动新增", type: 'info' });
 			}
 
 		},

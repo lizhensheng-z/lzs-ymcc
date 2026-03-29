@@ -41,7 +41,7 @@
 		</el-table>
 		<!--工具条-->
 		<el-col :span="24" class="toolbar">
-			<el-button type="danger">批量删除</el-button>
+			<el-button type="danger" @click="batchRemove" :disabled="this.sels.length===0">批量删除</el-button>
 			<el-pagination layout="prev, pager, next" @current-change="handleCurrentChange"  :page-size="10" :total="total" style="float:right;">
 			</el-pagination>
 		</el-col>
@@ -114,6 +114,7 @@
 				page:1,//当前页,要传递到后台的
 				total:0, //分页总数
 			    pagers:[], //当前页数据
+				sels: [], //选中列表
 			}
 		},
 		methods: {
@@ -169,10 +170,62 @@
 				//分页查询
                 this.$http.post("/pager/pager/pagelist",para) //$.Post(.....)
                     .then(result=>{
-                        this.total = result.data.total;
-                        this.pagers = result.data.rows;
+                        this.total = result.data.data.total;
+                        this.pagers = result.data.data.rows;
                         this.listLoading = false;  //关闭加载圈
                     });
+			},
+			// 选择变更
+			selsChange(sels) {
+				this.sels = sels;
+			},
+			// 编辑
+			edit(row) {
+				this.addForm = Object.assign({}, row);
+				this.addFormVisible = true;
+			},
+			// 删除
+			del(row) {
+				this.$confirm('确认删除该记录吗?', '提示', {
+					type: 'warning'
+				}).then(() => {
+					this.listLoading = true;
+					this.$http.delete("/pager/pager/" + row.id).then(result => {
+						let {success, message} = result.data;
+						if (success) {
+							this.$message({message: '删除成功', type: 'success'});
+							this.getPagers();
+						} else {
+							this.$message({message: '删除失败[' + message + ']', type: 'error'});
+						}
+						this.listLoading = false;
+					}).catch(error => {
+						this.listLoading = false;
+						this.$message({message: '删除失败[' + error.message + ']', type: 'error'});
+					});
+				});
+			},
+			// 批量删除
+			batchRemove() {
+				let ids = this.sels.map(item => item.id);
+				this.$confirm('确认删除选中记录吗？', '提示', {
+					type: 'warning'
+				}).then(() => {
+					this.listLoading = true;
+					this.$http.post("/pager/pager/batchRemove", {ids: ids}).then(result => {
+						let {success, message} = result.data;
+						if (success) {
+							this.$message({message: '批量删除成功', type: 'success'});
+							this.getPagers();
+						} else {
+							this.$message({message: '批量删除失败[' + message + ']', type: 'error'});
+						}
+						this.listLoading = false;
+					}).catch(error => {
+						this.listLoading = false;
+						this.$message({message: '批量删除失败[' + error.message + ']', type: 'error'});
+					});
+				});
 			}
 		},
 		mounted() {
