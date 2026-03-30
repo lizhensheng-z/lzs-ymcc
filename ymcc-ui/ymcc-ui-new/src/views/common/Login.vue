@@ -46,7 +46,8 @@ export default {
     return {
       loginForm: {
         username: '',
-        password: ''
+        password: '',
+        type: 1
       },
       rules: {
         username: [
@@ -66,7 +67,8 @@ export default {
           this.loading = true
           this.$http.post('/uaa/login/common', {
             username: this.loginForm.username,
-            password: this.loginForm.password
+            password: this.loginForm.password,
+            type: this.loginForm.type
           }).then(res => {
             if (res.data.success) {
               // 保存 token
@@ -74,6 +76,8 @@ export default {
               localStorage.setItem('U-TOKEN', data.access_token)
               localStorage.setItem('R-TOKEN', data.refresh_token)
               localStorage.setItem('expiresTime', data.expiresTime)
+              // 保存用户信息
+              localStorage.setItem('user', JSON.stringify({ username: this.loginForm.username }))
               // 跳转首页
               this.$router.push('/')
             } else {

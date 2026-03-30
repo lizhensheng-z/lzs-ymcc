@@ -61,6 +61,10 @@ public class LoginController {
     public JSONResult registerByPhone(@RequestBody Login login){
             loginService.insert(login);
             //获取到插入后数据的主键
+            System.out.println("注册登录用户，生成的ID: " + login.getId());
+        if (login.getId() == null) {
+            return JSONResult.error("用户注册失败：无法获取用户ID");
+        }
         return JSONResult.success(login.getId());
     }
     /**

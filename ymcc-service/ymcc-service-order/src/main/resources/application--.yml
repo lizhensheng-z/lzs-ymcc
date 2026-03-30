@@ -27,6 +27,12 @@ spring:
         max-idle: 8
 #seata:
 #  enableAutoDataSourceProxy: false #关闭DataSource代理的自动配置，我们要手动配置
+seata:
+  service:
+    vgroupMapping:
+      fsp_tx_group: default
+    grouplist:
+      default: 101.43.63.144:8091
 #mybatis-plus
 mybatis-plus:
   mapper-locations: classpath:/cn/lzs/ymcc/mapper/*.xml #加载读取mapper.xml文件的位置

@@ -19,45 +19,32 @@ import org.springframework.security.oauth2.provider.token.store.JwtTokenStore;
 public class ResourceServerConfig implements ResourceServerConfigurer {
 
     //2.3.配置Token的存储方案
-    //基于内存的Token存储
     @Bean
-    public TokenStore tokenStore(){
-        //return new InMemoryTokenStore();
+    public TokenStore tokenStore() {
         return new JwtTokenStore(jwtAccessTokenConverter());
     }
 
-    //2.4.配置令牌转换器 ，设置JWT签名密钥。它可以是简单的MAC密钥，也可以是RSA密钥
-    private final String sign_key  = "123";
-
     //JWT令牌校验工具
+    private final String sign_key = "123";
+
     @Bean
-    public JwtAccessTokenConverter jwtAccessTokenConverter(){
+    public JwtAccessTokenConverter jwtAccessTokenConverter() {
         JwtAccessTokenConverter jwtAccessTokenConverter = new JwtAccessTokenConverter();
-        //设置JWT签名密钥。它可以是简单的MAC密钥，也可以是RSA密钥
         jwtAccessTokenConverter.setSigningKey(sign_key);
         return jwtAccessTokenConverter;
     }
 
-    //授权服务安全配置
     @Override
     public void configure(ResourceServerSecurityConfigurer configurer) throws Exception {
-        //微服务的资源ID
-        configurer.resourceId("commonId");//改
-        //token的存储
+        configurer.resourceId("userId");
         configurer.tokenStore(tokenStore());
     }
 
-    //资源的授权规则配置
     @Override
     public void configure(HttpSecurity httpSecurity) throws Exception {
-//        TODO
         httpSecurity.authorizeRequests()
-                .antMatchers(
-                "/verifyCode/**","/**","/swagger-ui.html").permitAll()
-                //校验scope必须为hrm ， 对应认证服务的客户端详情配置的clientId
-//                .antMatchers("/**").access("#oauth2.hasScope('ymcc')")//改
-//                .anyRequest().authenticated()
+                .antMatchers("/user/register", "/user/loginId/**").permitAll()  // 放行注册接口
+                .antMatchers("/**", "/swagger-ui.html").permitAll()
                 .and().csrf().disable();
-
     }
 }

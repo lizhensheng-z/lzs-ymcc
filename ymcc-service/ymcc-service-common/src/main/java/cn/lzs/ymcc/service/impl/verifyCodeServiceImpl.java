@@ -26,7 +26,7 @@ public class verifyCodeServiceImpl implements VerifyCodeService {
     private RedisTemplate<Object,Object> redisTemplate;
 
     @Override
-    public void generateCode(String phone) {
+    public String generateCode(String phone) {
         //校验手机号是否合法
         if(StringUtils.isEmpty(phone)){
             throw new GlobalBusinessException(SystemConstants.PHONE_IS_NOT_NULL);
@@ -63,7 +63,8 @@ public class verifyCodeServiceImpl implements VerifyCodeService {
         }
         // 两部分都要做 抽出来放到最后将验证码存入redis，设置过期时间
         redisTemplate.opsForValue().set(key,verifyCode,5, TimeUnit.MINUTES);
-        //TODO 阿里云短信发送给用户
-        SendSmsUtil.sendMessageCode(phone,verifyCode.getCode());
+        // 模拟发送短信
+        SendSmsUtil.sendMessageCode(phone, verifyCode.getCode());
+        return verifyCode.getCode();
     }
 }

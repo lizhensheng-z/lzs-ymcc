@@ -6,16 +6,16 @@
         <p>用户注册</p>
       </div>
       <el-form :model="registerForm" :rules="rules" ref="registerForm">
-        <el-form-item prop="phone">
+        <el-form-item prop="mobile">
           <el-input
-            v-model="registerForm.phone"
+            v-model="registerForm.mobile"
             placeholder="请输入手机号"
             prefix-icon="el-icon-phone"
           ></el-input>
         </el-form-item>
-        <el-form-item prop="code">
+        <el-form-item prop="smsCode">
           <el-input
-            v-model="registerForm.code"
+            v-model="registerForm.smsCode"
             placeholder="请输入验证码"
             prefix-icon="el-icon-message"
             style="width: 60%"
@@ -83,22 +83,23 @@ export default {
     }
     return {
       registerForm: {
-        phone: '',
-        code: '',
+        mobile: '',
+        smsCode: '',
         password: '',
-        confirmPassword: ''
+        confirmPassword: '',
+        regChannel: 1
       },
       rules: {
-        phone: [
+        mobile: [
           { required: true, message: '请输入手机号', trigger: 'blur' },
           { pattern: /^1[3-9]\d{9}$/, message: '手机号格式不正确', trigger: 'blur' }
         ],
-        code: [
+        smsCode: [
           { required: true, message: '请输入验证码', trigger: 'blur' }
         ],
         password: [
           { required: true, validator: validatePass, trigger: 'blur' },
-          { min: 6, message: '密码长度不能少于6位', trigger: 'blur' }
+          { pattern: /^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z]{6,20}$/, message: '密码必须包含字母和数字，6-20位', trigger: 'blur' }
         ],
         confirmPassword: [
           { required: true, validator: validatePass2, trigger: 'blur' }
@@ -112,30 +113,35 @@ export default {
   },
   methods: {
     sendCode() {
-      if (!this.registerForm.phone) {
+      if (!this.registerForm.mobile) {
         this.$message.warning('请先输入手机号')
         return
       }
-      if (!/^1[3-9]\d{9}$/.test(this.registerForm.phone)) {
+      if (!/^1[3-9]\d{9}$/.test(this.registerForm.mobile)) {
         this.$message.warning('手机号格式不正确')
         return
       }
 
-      this.$http.get(`/common/verifyCode/sendSmsCode/${this.registerForm.phone}`)
+      this.$http.get(`/common/verifyCode/sendSmsCode/${this.registerForm.mobile}`)
         .then(res => {
           if (res.data.success) {
-            this.$message.success('验证码已发送')
-            this.codeBtnDisabled = true
-            this.countdown = 60
-            this.timer = setInterval(() => {
-              this.countdown--
-              this.codeBtnText = `${this.countdown}秒后重发`
-              if (this.countdown <= 0) {
-                clearInterval(this.timer)
-                this.codeBtnDisabled = false
-                this.codeBtnText = '获取验证码'
+            // 弹窗显示验证码
+            this.$alert(`您的验证码是：${res.data.data}`, '验证码', {
+              confirmButtonText: '确定',
+              callback: action => {
+                this.codeBtnDisabled = true
+                this.countdown = 60
+                this.timer = setInterval(() => {
+                  this.countdown--
+                  this.codeBtnText = `${this.countdown}秒后重发`
+                  if (this.countdown <= 0) {
+                    clearInterval(this.timer)
+                    this.codeBtnDisabled = false
+                    this.codeBtnText = '获取验证码'
+                  }
+                }, 1000)
               }
-            }, 1000)
+            })
           } else {
             this.$message.error(res.data.message || '发送失败')
           }
@@ -146,9 +152,10 @@ export default {
         if (valid) {
           this.loading = true
           this.$http.post('/user/user/register', {
-            phone: this.registerForm.phone,
-            code: this.registerForm.code,
-            password: this.registerForm.password
+            mobile: this.registerForm.mobile,
+            smsCode: this.registerForm.smsCode,
+            password: this.registerForm.password,
+            regChannel: this.registerForm.regChannel
           }).then(res => {
             if (res.data.success) {
               this.$message.success('注册成功')

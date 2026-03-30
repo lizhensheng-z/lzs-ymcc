@@ -29,8 +29,8 @@ public class verifyCodeController {
     @ApiOperation("发送验证码")
     @GetMapping("/sendSmsCode/{phone}")
     public JSONResult sendSmsCode(@PathVariable("phone") String phone){
-        verifyCodeService.generateCode(phone);
-        return JSONResult.success();
+        String code = verifyCodeService.generateCode(phone);
+        return JSONResult.success(code);
     }
     @GetMapping("/sendEmailCode/{email}")
     public JSONResult sendEmailCode(@PathVariable("email") String email){

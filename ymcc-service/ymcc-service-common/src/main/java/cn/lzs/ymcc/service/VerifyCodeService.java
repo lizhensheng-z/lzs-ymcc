@@ -5,5 +5,10 @@ package cn.lzs.ymcc.service;
  */
 public interface VerifyCodeService {
 
-    void generateCode(String phone);
+    /**
+     * 生成验证码并返回
+     * @param phone 手机号
+     * @return 验证码
+     */
+    String generateCode(String phone);
 }

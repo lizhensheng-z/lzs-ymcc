@@ -71,6 +71,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         }
         //1.2校验验证码是否过期
         VerifyCode redisCode = (VerifyCode) redisTemplate.opsForValue().get(RedisConstants.REDIS_VERIFY_CODE_KEY_PREFIX+phone);
+        assert redisCode != null;
         if(redisCode.getCode() == null){
             throw new GlobalBusinessException(SystemConstants.VERIFY_CODE_IS_EXPIRED);
         }
@@ -86,8 +87,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         login.setPassword(passwordEncoder.encode(phoneRegisterDTO.getPassword()));
         login.setType(SystemConstants.REGISTER_TYPE_USER);
         JSONResult jsonResult = loginApi.registerByPhone(login);
-        //TODO 不确定是否能够获取到
-        Long login_id =Long.valueOf(jsonResult.getData().toString()) ;
+        // 检查返回结果
+        if (jsonResult == null || !jsonResult.isSuccess() || jsonResult.getData() == null) {
+            throw new GlobalBusinessException("用户注册失败: " + (jsonResult != null ? jsonResult.getMessage() : "服务调用失败"));
+        }
+        Long login_id = Long.valueOf(jsonResult.getData().toString());
 
         //2.2将Login表的id和phone存入t_user表，注册t_user
         user = new User();//一定要new user 因为前面查的是null根本就没有
