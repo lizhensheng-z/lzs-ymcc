@@ -181,6 +181,121 @@
 
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+// 页面容器
+section {
+	background: transparent;
+}
 
+// 工具栏样式
+.toolbar {
+	background: #fff;
+	border-radius: 8px;
+	padding: 16px 20px;
+	margin-bottom: 16px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+	.el-form-item {
+		margin-bottom: 0;
+	}
+
+	.el-input {
+		::v-deep .el-input__inner {
+			border-radius: 6px;
+			transition: all 0.3s;
+
+			&:focus {
+				border-color: #667eea;
+				box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+			}
+		}
+	}
+
+	.el-button {
+		border-radius: 6px;
+		font-weight: 500;
+		transition: all 0.3s;
+
+		&:hover {
+			transform: translateY(-1px);
+		}
+	}
+}
+
+// 表格样式
+::v-deep .el-table {
+	border-radius: 8px;
+	overflow: hidden;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+	&::before {
+		display: none;
+	}
+
+	.el-table__header-wrapper {
+		.el-table__header {
+			th {
+				background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+				color: #fff !important;
+				font-weight: 500;
+				padding: 14px 0;
+				border-bottom: none !important;
+
+				.cell {
+					font-size: 14px;
+				}
+			}
+		}
+	}
+
+	.el-table__body-wrapper {
+		.el-table__row {
+			transition: all 0.3s;
+
+			&:hover {
+				background-color: #f5f7fa !important;
+			}
+
+			td {
+				padding: 12px 0;
+				border-bottom: 1px solid #ebeef5;
+			}
+		}
+	}
+}
+
+// 分页样式
+::v-deep .el-pagination {
+	margin-top: 16px;
+
+	.btn-prev, .btn-next {
+		border-radius: 6px;
+	}
+
+	.el-pager li {
+		border-radius: 6px;
+		font-weight: 500;
+		transition: all 0.3s;
+
+		&.active {
+			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+		}
+
+		&:hover {
+			color: #667eea;
+		}
+	}
+}
+
+// 标签样式
+::v-deep .el-tag {
+	border-radius: 4px;
+	border: none;
+	background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+	color: #667eea;
+	max-width: 180px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
 </style>

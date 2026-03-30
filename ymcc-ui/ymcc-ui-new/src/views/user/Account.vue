@@ -1,5 +1,5 @@
 <template>
-  <div class="user-orders">
+  <div class="user-account">
     <!-- 顶部导航 -->
     <div class="header">
       <div class="header-content">
@@ -69,72 +69,70 @@
 
       <!-- 右侧内容 -->
       <div class="content">
-        <div class="orders-container">
-          <h2>我的订单</h2>
+        <div class="account-container">
+          <h2>我的账户</h2>
 
-          <!-- 搜索筛选 -->
-          <div class="filter-bar">
-            <el-select v-model="query.status" placeholder="订单状态" clearable @change="loadOrders">
-              <el-option label="全部" :value="null"></el-option>
-              <el-option label="待支付" :value="1"></el-option>
-              <el-option label="已完成" :value="4"></el-option>
-              <el-option label="已取消" :value="5"></el-option>
-            </el-select>
+          <!-- 账户概览 -->
+          <div class="account-overview">
+            <div class="overview-card">
+              <div class="icon wallet">
+                <i class="el-icon-wallet"></i>
+              </div>
+              <div class="info">
+                <div class="label">账户余额</div>
+                <div class="value">¥{{ accountInfo.usableAmount || 0 }}</div>
+              </div>
+            </div>
+            <div class="overview-card">
+              <div class="icon frozen">
+                <i class="el-icon-lock"></i>
+              </div>
+              <div class="info">
+                <div class="label">冻结金额</div>
+                <div class="value">¥{{ accountInfo.frozenAmount || 0 }}</div>
+              </div>
+            </div>
+            <div class="overview-card">
+              <div class="icon points">
+                <i class="el-icon-star-on"></i>
+              </div>
+              <div class="info">
+                <div class="label">积分</div>
+                <div class="value">{{ userInfo.points || 0 }}</div>
+              </div>
+            </div>
           </div>
 
-          <!-- 订单列表 -->
-          <el-table :data="orders" v-loading="loading" style="width: 100%">
-            <el-table-column prop="orderNo" label="订单号" width="200"></el-table-column>
-            <el-table-column prop="title" label="课程名称"></el-table-column>
-            <el-table-column prop="totalAmount" label="金额" width="100">
-              <template slot-scope="scope">
-                <span class="price">¥{{ scope.row.totalAmount }}</span>
-              </template>
-            </el-table-column>
-            <el-table-column prop="statusOrder" label="状态" width="100">
-              <template slot-scope="scope">
-                <el-tag :type="getStatusType(scope.row.statusOrder)">
-                  {{ getStatusText(scope.row.statusOrder) }}
-                </el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column prop="createTime" label="下单时间" width="180">
-              <template slot-scope="scope">
-                {{ formatTime(scope.row.createTime) }}
-              </template>
-            </el-table-column>
-            <el-table-column label="操作" width="150" fixed="right">
-              <template slot-scope="scope">
-                <el-button
-                  v-if="scope.row.statusOrder === 1"
-                  type="primary"
-                  size="mini"
-                  @click="payOrder(scope.row)">去支付</el-button>
-                <el-button
-                  v-if="scope.row.statusOrder === 4"
-                  type="text"
-                  size="mini"
-                  @click="viewCourse(scope.row)">查看课程</el-button>
-              </template>
-            </el-table-column>
-          </el-table>
+          <!-- 账户明细 -->
+          <div class="section">
+            <h3>账户明细</h3>
+            <el-table :data="accountLogs" v-loading="loading" style="width: 100%">
+              <el-table-column prop="type" label="类型" width="100">
+                <template slot-scope="scope">
+                  <el-tag :type="scope.row.type === 1 ? 'success' : 'warning'">
+                    {{ scope.row.type === 1 ? '收入' : '支出' }}
+                  </el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column prop="amount" label="金额" width="120">
+                <template slot-scope="scope">
+                  <span :class="scope.row.type === 1 ? 'income' : 'expense'">
+                    {{ scope.row.type === 1 ? '+' : '-' }}¥{{ scope.row.amount }}
+                  </span>
+                </template>
+              </el-table-column>
+              <el-table-column prop="description" label="描述"></el-table-column>
+              <el-table-column prop="createTime" label="时间" width="180">
+                <template slot-scope="scope">
+                  {{ formatTime(scope.row.createTime) }}
+                </template>
+              </el-table-column>
+            </el-table>
 
-          <!-- 分页 -->
-          <el-pagination
-            v-if="total > 0"
-            class="pagination"
-            @current-change="handlePageChange"
-            :current-page="query.page"
-            :page-size="query.rows"
-            layout="total, prev, pager, next"
-            :total="total">
-          </el-pagination>
-
-          <!-- 空状态 -->
-          <div class="empty" v-if="!loading && orders.length === 0">
-            <i class="el-icon-s-order"></i>
-            <p>暂无订单记录</p>
-            <router-link to="/course/list">去选课</router-link>
+            <!-- 空状态 -->
+            <div class="empty" v-if="!loading && accountLogs.length === 0">
+              <p>暂无账户明细</p>
+            </div>
           </div>
         </div>
       </div>
@@ -149,27 +147,25 @@
 
 <script>
 export default {
-  name: 'UserOrders',
+  name: 'UserAccount',
   data() {
     return {
-      activeMenu: '/user/orders',
+      activeMenu: '/user/account',
       isLoggedIn: false,
       userInfo: {},
-      loading: false,
-      orders: [],
-      total: 0,
-      query: {
-        page: 1,
-        rows: 10,
-        status: null
-      }
+      accountInfo: {
+        usableAmount: 0,
+        frozenAmount: 0
+      },
+      accountLogs: [],
+      loading: false
     }
   },
   mounted() {
     this.checkLogin()
     if (this.isLoggedIn) {
       this.loadUserInfo()
-      this.loadOrders()
+      this.loadAccountInfo()
     }
   },
   methods: {
@@ -193,69 +189,18 @@ export default {
         })
         .catch(() => {})
     },
-    loadOrders() {
-      this.loading = true
-      const params = {
-        page: this.query.page,
-        rows: this.query.rows
-      }
-      if (this.query.status !== null && this.query.status !== '') {
-        params.status = this.query.status
-      }
-
-      this.$http.post('/order/courseOrder/pagelist', params)
+    loadAccountInfo() {
+      this.$http.get('/user/account/balance')
         .then(res => {
           if (res.data.success) {
-            this.orders = res.data.data.rows || []
-            this.total = res.data.data.total || 0
+            this.accountInfo = res.data.data || {}
           }
         })
-        .catch(() => {
-          this.orders = []
-          this.total = 0
-        })
-        .finally(() => {
-          this.loading = false
-        })
-    },
-    handlePageChange(page) {
-      this.query.page = page
-      this.loadOrders()
-    },
-    getStatusType(status) {
-      const map = {
-        1: 'warning',
-        2: 'info',
-        3: 'info',
-        4: 'success',
-        5: 'info'
-      }
-      return map[status] || 'info'
-    },
-    getStatusText(status) {
-      const map = {
-        1: '待支付',
-        2: '已取消',
-        3: '已取消',
-        4: '已完成',
-        5: '已取消'
-      }
-      return map[status] || '未知'
+        .catch(() => {})
     },
     formatTime(time) {
       if (!time) return '-'
       return new Date(time).toLocaleString()
-    },
-    payOrder(order) {
-      // 跳转到支付确认页
-      this.$router.push({
-        path: '/order/confirm',
-        query: { orderId: order.id }
-      })
-    },
-    viewCourse(order) {
-      // 跳转到课程学习页
-      this.$router.push(`/user/course/learn/${order.courseId}`)
     },
     logout() {
       localStorage.clear()
@@ -266,7 +211,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.user-orders {
+.user-account {
   min-height: 100vh;
   background: #f5f5f5;
 }
@@ -376,7 +321,7 @@ export default {
   flex: 1;
 }
 
-.orders-container {
+.account-container {
   background: #fff;
   border-radius: 8px;
   padding: 30px;
@@ -387,45 +332,83 @@ export default {
   }
 }
 
-.filter-bar {
-  margin-bottom: 20px;
+.account-overview {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 30px;
+
+  .overview-card {
+    background: #f9f9f9;
+    border-radius: 8px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+
+    .icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 15px;
+
+      i {
+        font-size: 28px;
+        color: #fff;
+      }
+
+      &.wallet {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+
+      &.frozen {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      }
+
+      &.points {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      }
+    }
+
+    .info {
+      .label {
+        color: #999;
+        font-size: 14px;
+        margin-bottom: 5px;
+      }
+
+      .value {
+        font-size: 24px;
+        font-weight: bold;
+        color: #333;
+      }
+    }
+  }
 }
 
-.price {
-  color: #ff6b6b;
+.section {
+  h3 {
+    margin: 0 0 15px;
+    font-size: 18px;
+  }
+}
+
+.income {
+  color: #67c23a;
   font-weight: bold;
 }
 
-.pagination {
-  margin-top: 20px;
-  text-align: right;
+.expense {
+  color: #f56c6c;
+  font-weight: bold;
 }
 
 .empty {
   text-align: center;
-  padding: 60px 20px;
+  padding: 40px;
   color: #999;
-
-  i {
-    font-size: 60px;
-    color: #ddd;
-    display: block;
-    margin-bottom: 20px;
-  }
-
-  p {
-    margin: 0 0 20px;
-    font-size: 16px;
-  }
-
-  a {
-    color: #667eea;
-    text-decoration: none;
-
-    &:hover {
-      text-decoration: underline;
-    }
-  }
 }
 
 .footer {

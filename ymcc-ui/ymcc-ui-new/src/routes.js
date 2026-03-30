@@ -10,6 +10,8 @@ import UserCourses from './views/user/Courses.vue'
 import UserHome from './views/user/Home.vue'
 import Profile from './views/user/Profile.vue'
 import Orders from './views/user/Orders.vue'
+import Account from './views/user/Account.vue'
+import Message from './views/user/Message.vue'
 import CourseLearn from './views/user/CourseLearn.vue'
 import OrderConfirm from './views/course/OrderConfirm.vue'
 import OrderSuccess from './views/course/OrderSuccess.vue'
@@ -127,13 +129,6 @@ let routes = [
         meta: { requiresAuth: true }
     },
     {
-        path: '/user/security',
-        component: UserIndex,
-        name: '账户安全',
-        hidden: false,
-        meta: { requiresAuth: true }
-    },
-    {
         path: '/user/orders',
         component: Orders,
         name: '我的订单',
@@ -142,15 +137,15 @@ let routes = [
     },
     {
         path: '/user/account',
-        component: UserIndex,
-        name: '资金账户',
+        component: Account,
+        name: '我的账户',
         hidden: false,
         meta: { requiresAuth: true }
     },
     {
         path: '/user/msg',
-        component: UserIndex,
-        name: '我的消息',
+        component: Message,
+        name: '消息中心',
         hidden: false,
         meta: { requiresAuth: true }
     },

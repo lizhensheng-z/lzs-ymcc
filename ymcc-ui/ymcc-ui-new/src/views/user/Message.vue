@@ -1,5 +1,5 @@
 <template>
-  <div class="user-orders">
+  <div class="user-message">
     <!-- 顶部导航 -->
     <div class="header">
       <div class="header-content">
@@ -69,55 +69,51 @@
 
       <!-- 右侧内容 -->
       <div class="content">
-        <div class="orders-container">
-          <h2>我的订单</h2>
+        <div class="message-container">
+          <h2>消息中心</h2>
 
-          <!-- 搜索筛选 -->
+          <!-- 消息筛选 -->
           <div class="filter-bar">
-            <el-select v-model="query.status" placeholder="订单状态" clearable @change="loadOrders">
-              <el-option label="全部" :value="null"></el-option>
-              <el-option label="待支付" :value="1"></el-option>
-              <el-option label="已完成" :value="4"></el-option>
-              <el-option label="已取消" :value="5"></el-option>
-            </el-select>
+            <el-radio-group v-model="query.type" @change="loadMessages">
+              <el-radio-button :label="null">全部</el-radio-button>
+              <el-radio-button :label="1">系统通知</el-radio-button>
+              <el-radio-button :label="2">订单消息</el-radio-button>
+              <el-radio-button :label="3">课程通知</el-radio-button>
+            </el-radio-group>
+            <el-button type="text" @click="markAllRead" :disabled="unreadCount === 0">
+              全部标为已读
+            </el-button>
           </div>
 
-          <!-- 订单列表 -->
-          <el-table :data="orders" v-loading="loading" style="width: 100%">
-            <el-table-column prop="orderNo" label="订单号" width="200"></el-table-column>
-            <el-table-column prop="title" label="课程名称"></el-table-column>
-            <el-table-column prop="totalAmount" label="金额" width="100">
-              <template slot-scope="scope">
-                <span class="price">¥{{ scope.row.totalAmount }}</span>
-              </template>
-            </el-table-column>
-            <el-table-column prop="statusOrder" label="状态" width="100">
-              <template slot-scope="scope">
-                <el-tag :type="getStatusType(scope.row.statusOrder)">
-                  {{ getStatusText(scope.row.statusOrder) }}
-                </el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column prop="createTime" label="下单时间" width="180">
-              <template slot-scope="scope">
-                {{ formatTime(scope.row.createTime) }}
-              </template>
-            </el-table-column>
-            <el-table-column label="操作" width="150" fixed="right">
-              <template slot-scope="scope">
-                <el-button
-                  v-if="scope.row.statusOrder === 1"
-                  type="primary"
-                  size="mini"
-                  @click="payOrder(scope.row)">去支付</el-button>
-                <el-button
-                  v-if="scope.row.statusOrder === 4"
-                  type="text"
-                  size="mini"
-                  @click="viewCourse(scope.row)">查看课程</el-button>
-              </template>
-            </el-table-column>
-          </el-table>
+          <!-- 消息列表 -->
+          <div class="message-list" v-loading="loading">
+            <div
+              v-for="msg in messages"
+              :key="msg.id"
+              class="message-item"
+              :class="{ unread: !msg.isRead }"
+              @click="viewMessage(msg)">
+              <div class="message-icon">
+                <i :class="getMessageIcon(msg.type)"></i>
+              </div>
+              <div class="message-content">
+                <div class="message-header">
+                  <span class="title">{{ msg.title }}</span>
+                  <span class="time">{{ formatTime(msg.createTime) }}</span>
+                </div>
+                <div class="message-body">{{ msg.content }}</div>
+              </div>
+              <div class="message-actions" v-if="!msg.isRead">
+                <el-tag type="danger" size="mini">未读</el-tag>
+              </div>
+            </div>
+
+            <!-- 空状态 -->
+            <div class="empty" v-if="!loading && messages.length === 0">
+              <i class="el-icon-message"></i>
+              <p>暂无消息</p>
+            </div>
+          </div>
 
           <!-- 分页 -->
           <el-pagination
@@ -129,16 +125,20 @@
             layout="total, prev, pager, next"
             :total="total">
           </el-pagination>
-
-          <!-- 空状态 -->
-          <div class="empty" v-if="!loading && orders.length === 0">
-            <i class="el-icon-s-order"></i>
-            <p>暂无订单记录</p>
-            <router-link to="/course/list">去选课</router-link>
-          </div>
         </div>
       </div>
     </div>
+
+    <!-- 消息详情弹窗 -->
+    <el-dialog :title="currentMessage ? currentMessage.title : ''" :visible.sync="dialogVisible" width="500px">
+      <div v-if="currentMessage">
+        <p class="dialog-time">时间：{{ formatTime(currentMessage.createTime) }}</p>
+        <div class="dialog-content">{{ currentMessage.content }}</div>
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="dialogVisible = false">关闭</el-button>
+      </span>
+    </el-dialog>
 
     <!-- 底部 -->
     <div class="footer">
@@ -149,27 +149,30 @@
 
 <script>
 export default {
-  name: 'UserOrders',
+  name: 'UserMessage',
   data() {
     return {
-      activeMenu: '/user/orders',
+      activeMenu: '/user/msg',
       isLoggedIn: false,
       userInfo: {},
-      loading: false,
-      orders: [],
+      messages: [],
       total: 0,
+      loading: false,
       query: {
         page: 1,
         rows: 10,
-        status: null
-      }
+        type: null
+      },
+      dialogVisible: false,
+      currentMessage: null,
+      unreadCount: 0
     }
   },
   mounted() {
     this.checkLogin()
     if (this.isLoggedIn) {
       this.loadUserInfo()
-      this.loadOrders()
+      this.loadMessages()
     }
   },
   methods: {
@@ -193,25 +196,25 @@ export default {
         })
         .catch(() => {})
     },
-    loadOrders() {
+    loadMessages() {
       this.loading = true
       const params = {
         page: this.query.page,
         rows: this.query.rows
       }
-      if (this.query.status !== null && this.query.status !== '') {
-        params.status = this.query.status
+      if (this.query.type !== null) {
+        params.type = this.query.type
       }
 
-      this.$http.post('/order/courseOrder/pagelist', params)
+      this.$http.post('/user/stationMessage/pagelist', params)
         .then(res => {
           if (res.data.success) {
-            this.orders = res.data.data.rows || []
+            this.messages = res.data.data.rows || []
             this.total = res.data.data.total || 0
           }
         })
         .catch(() => {
-          this.orders = []
+          this.messages = []
           this.total = 0
         })
         .finally(() => {
@@ -220,42 +223,42 @@ export default {
     },
     handlePageChange(page) {
       this.query.page = page
-      this.loadOrders()
+      this.loadMessages()
     },
-    getStatusType(status) {
-      const map = {
-        1: 'warning',
-        2: 'info',
-        3: 'info',
-        4: 'success',
-        5: 'info'
+    getMessageIcon(type) {
+      const iconMap = {
+        1: 'el-icon-bell',
+        2: 'el-icon-s-order',
+        3: 'el-icon-reading'
       }
-      return map[status] || 'info'
-    },
-    getStatusText(status) {
-      const map = {
-        1: '待支付',
-        2: '已取消',
-        3: '已取消',
-        4: '已完成',
-        5: '已取消'
-      }
-      return map[status] || '未知'
+      return iconMap[type] || 'el-icon-message'
     },
     formatTime(time) {
       if (!time) return '-'
       return new Date(time).toLocaleString()
     },
-    payOrder(order) {
-      // 跳转到支付确认页
-      this.$router.push({
-        path: '/order/confirm',
-        query: { orderId: order.id }
-      })
+    viewMessage(msg) {
+      this.currentMessage = msg
+      this.dialogVisible = true
+      // 标记已读
+      if (!msg.isRead) {
+        this.$http.put(`/user/stationMessage/${msg.id}`)
+          .then(() => {
+            msg.isRead = true
+            this.unreadCount--
+          })
+          .catch(() => {})
+      }
     },
-    viewCourse(order) {
-      // 跳转到课程学习页
-      this.$router.push(`/user/course/learn/${order.courseId}`)
+    markAllRead() {
+      this.$http.put('/user/stationMessage/readAll')
+        .then(res => {
+          if (res.data.success) {
+            this.$message.success('已全部标为已读')
+            this.loadMessages()
+          }
+        })
+        .catch(() => {})
     },
     logout() {
       localStorage.clear()
@@ -266,7 +269,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.user-orders {
+.user-message {
   min-height: 100vh;
   background: #f5f5f5;
 }
@@ -376,7 +379,7 @@ export default {
   flex: 1;
 }
 
-.orders-container {
+.message-container {
   background: #fff;
   border-radius: 8px;
   padding: 30px;
@@ -388,12 +391,81 @@ export default {
 }
 
 .filter-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 20px;
 }
 
-.price {
-  color: #ff6b6b;
-  font-weight: bold;
+.message-list {
+  .message-item {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
+    transition: background 0.3s;
+
+    &:hover {
+      background: #f9f9f9;
+    }
+
+    &.unread {
+      background: #f0f9ff;
+
+      .title {
+        font-weight: bold;
+      }
+    }
+
+    .message-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #667eea;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 15px;
+
+      i {
+        font-size: 18px;
+        color: #fff;
+      }
+    }
+
+    .message-content {
+      flex: 1;
+
+      .message-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 5px;
+
+        .title {
+          font-size: 14px;
+          color: #333;
+        }
+
+        .time {
+          font-size: 12px;
+          color: #999;
+        }
+      }
+
+      .message-body {
+        font-size: 13px;
+        color: #666;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+    }
+
+    .message-actions {
+      margin-left: 10px;
+    }
+  }
 }
 
 .pagination {
@@ -414,18 +486,19 @@ export default {
   }
 
   p {
-    margin: 0 0 20px;
+    margin: 0;
     font-size: 16px;
   }
+}
 
-  a {
-    color: #667eea;
-    text-decoration: none;
+.dialog-time {
+  color: #999;
+  font-size: 14px;
+  margin-bottom: 15px;
+}
 
-    &:hover {
-      text-decoration: underline;
-    }
-  }
+.dialog-content {
+  line-height: 1.8;
 }
 
 .footer {

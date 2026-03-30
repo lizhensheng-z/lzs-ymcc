@@ -336,5 +336,182 @@
 	}
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+// 页面容器
+section {
+	background: transparent;
+}
+
+// 工具栏样式
+.toolbar {
+	background: #fff;
+	border-radius: 8px;
+	padding: 16px 20px;
+	margin-bottom: 16px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+	.el-form-item {
+		margin-bottom: 0;
+	}
+
+	.el-input {
+		::v-deep .el-input__inner {
+			border-radius: 6px;
+			transition: all 0.3s;
+
+			&:focus {
+				border-color: #667eea;
+				box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+			}
+		}
+	}
+
+	.el-button {
+		border-radius: 6px;
+		font-weight: 500;
+		transition: all 0.3s;
+
+		&:hover {
+			transform: translateY(-1px);
+		}
+	}
+}
+
+// 表格样式
+::v-deep .el-table {
+	border-radius: 8px;
+	overflow: hidden;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+	&::before {
+		display: none;
+	}
+
+	.el-table__header-wrapper {
+		.el-table__header {
+			th {
+				background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+				color: #fff !important;
+				font-weight: 500;
+				padding: 14px 0;
+				border-bottom: none !important;
+
+				.cell {
+					font-size: 14px;
+				}
+			}
+		}
+	}
+
+	.el-table__body-wrapper {
+		.el-table__row {
+			transition: all 0.3s;
+
+			&:hover {
+				background-color: #f5f7fa !important;
+			}
+
+			td {
+				padding: 12px 0;
+				border-bottom: 1px solid #ebeef5;
+			}
+		}
+	}
+
+	.el-table__empty-block {
+		background: #fff;
+	}
+}
+
+// 分页样式
+::v-deep .el-pagination {
+	margin-top: 16px;
+
+	.btn-prev, .btn-next {
+		border-radius: 6px;
+	}
+
+	.el-pager li {
+		border-radius: 6px;
+		font-weight: 500;
+		transition: all 0.3s;
+
+		&.active {
+			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+		}
+
+		&:hover {
+			color: #667eea;
+		}
+	}
+}
+
+// 弹窗表单样式
+::v-deep .el-dialog {
+	.el-dialog__header {
+		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+		padding: 18px 24px;
+		margin-right: 0;
+
+		.el-dialog__title {
+			color: #fff;
+			font-weight: 600;
+			font-size: 18px;
+		}
+
+		.el-dialog__headerbtn {
+			top: 18px;
+			right: 20px;
+
+			.el-dialog__close {
+				color: rgba(255, 255, 255, 0.8);
+				font-size: 18px;
+				transition: all 0.3s;
+
+				&:hover {
+					color: #fff;
+					transform: rotate(90deg);
+				}
+			}
+		}
+	}
+
+	.el-dialog__body {
+		padding: 24px;
+
+		.el-form-item {
+			.el-form-item__label {
+				font-weight: 500;
+				color: #606266;
+			}
+
+			.el-input__inner,
+			.el-textarea__inner {
+				border-radius: 6px;
+				transition: all 0.3s;
+
+				&:focus {
+					border-color: #667eea;
+					box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+				}
+			}
+
+			.el-select {
+				width: 100%;
+			}
+		}
+	}
+
+	.el-dialog__footer {
+		padding: 16px 24px;
+		border-top: 1px solid #ebeef5;
+		background: #fafafa;
+
+		.el-button {
+			border-radius: 6px;
+			padding: 10px 24px;
+			font-weight: 500;
+		}
+	}
+}
 </style>

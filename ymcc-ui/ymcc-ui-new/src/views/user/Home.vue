@@ -57,7 +57,7 @@
         </div>
         <div class="feature-card">
           <i class="el-icon-wallet"></i>
-          <h3>资金账户</h3>
+          <h3>我的账户</h3>
           <p>查看账户余额</p>
           <router-link to="/user/account">进入</router-link>
         </div>

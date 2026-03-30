@@ -48,21 +48,17 @@
             <i class="el-icon-s-custom"></i>
             <span>个人资料</span>
           </el-menu-item>
-          <el-menu-item index="/user/security">
-            <i class="el-icon-safety"></i>
-            <span>账户安全</span>
-          </el-menu-item>
           <el-menu-item index="/user/orders">
             <i class="el-icon-s-order"></i>
             <span>我的订单</span>
           </el-menu-item>
           <el-menu-item index="/user/account">
             <i class="el-icon-wallet"></i>
-            <span>资金账户</span>
+            <span>我的账户</span>
           </el-menu-item>
           <el-menu-item index="/user/msg">
             <i class="el-icon-message"></i>
-            <span>我的消息</span>
+            <span>消息中心</span>
           </el-menu-item>
         </el-menu>
       </div>
