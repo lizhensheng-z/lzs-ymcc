@@ -3,7 +3,13 @@ import Login from './views/common/Login.vue'
 import Register from './views/common/Register.vue'
 import CourseIndex from './views/course/Index.vue'
 import CourseList from './views/course/List.vue'
+import CourseDetail from './views/course/Detail.vue'
+import CourseCart from './views/course/Cart.vue'
 import UserIndex from './views/user/Index.vue'
+import UserCourses from './views/user/Courses.vue'
+import CourseLearn from './views/user/CourseLearn.vue'
+import OrderConfirm from './views/course/OrderConfirm.vue'
+import OrderSuccess from './views/course/OrderSuccess.vue'
 
 // 管理后台页面
 import AdminLogin from './views/itsource/Login.vue'
@@ -59,15 +65,28 @@ let routes = [
     },
     {
         path: '/course/detail/:id',
-        component: CourseIndex,
+        component: CourseDetail,
         name: '课程详情',
         hidden: true
     },
     {
         path: '/cart',
-        component: CourseIndex,
+        component: CourseCart,
         name: '购物车',
         hidden: false
+    },
+    {
+        path: '/order/confirm',
+        component: OrderConfirm,
+        name: '订单确认',
+        hidden: true,
+        meta: { requiresAuth: true }
+    },
+    {
+        path: '/order/success',
+        component: OrderSuccess,
+        name: '订单成功',
+        hidden: true
     },
     {
         path: '/user',
@@ -85,8 +104,15 @@ let routes = [
     },
     {
         path: '/user/courses',
-        component: UserIndex,
+        component: UserCourses,
         name: '我的课程',
+        hidden: false,
+        meta: { requiresAuth: true }
+    },
+    {
+        path: '/user/course/learn/:id',
+        component: CourseLearn,
+        name: '课程学习',
         hidden: false,
         meta: { requiresAuth: true }
     },

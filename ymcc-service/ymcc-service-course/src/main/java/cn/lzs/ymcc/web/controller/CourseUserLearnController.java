@@ -1,13 +1,18 @@
 package cn.lzs.ymcc.web.controller;
 
+import cn.lzs.ymcc.domain.Course;
 import cn.lzs.ymcc.service.ICourseUserLearnService;
+
 import cn.lzs.ymcc.domain.CourseUserLearn;
 import cn.lzs.ymcc.query.CourseUserLearnQuery;
 import cn.lzs.ymcc.result.JSONResult;
 import cn.lzs.ymcc.result.PageList;
+import cn.lzs.ymcc.util.LoginContext;
 import com.baomidou.mybatisplus.plugins.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/courseUserLearn")
@@ -44,6 +49,18 @@ public class CourseUserLearnController {
     @RequestMapping(value = "/{id}",method = RequestMethod.GET)
     public JSONResult get(@PathVariable("id")Long id){
         return JSONResult.success(courseUserLearnService.selectById(id));
+    }
+
+    /**
+     * 获取用户已购买的课程列表
+     */
+    @GetMapping("/myCourses")
+    public JSONResult getMyCourses(@RequestParam("loginId") Long loginId) {
+        if (loginId == null) {
+            return JSONResult.error("用户未登录");
+        }
+        List<Course> courses = courseUserLearnService.getLearnedCourseByLoginId(loginId);
+        return JSONResult.success(courses);
     }
 
 

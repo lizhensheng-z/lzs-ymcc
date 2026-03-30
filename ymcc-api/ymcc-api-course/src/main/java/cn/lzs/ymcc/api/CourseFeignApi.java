@@ -1,5 +1,6 @@
 package cn.lzs.ymcc.api;
 
+import cn.lzs.ymcc.domain.Course;
 import cn.lzs.ymcc.dto.CourseUserLearnDTO;
 import cn.lzs.ymcc.result.JSONResult;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -11,20 +12,19 @@ import java.util.List;
  * @author 李振生
  */
 @FeignClient(name = "service-course")
-@RequestMapping("/course")
 public interface CourseFeignApi {
     /**
      * 根据课程id获取课程信息
      * @param courseIds
      * @return
      */
-    @GetMapping("/info/{courseIds}")
+    @GetMapping("/course/info/{courseIds}")
     public JSONResult getCourseInfo(@PathVariable("courseIds") List<Long> courseIds);
 
     /**
      * 增加用户学习课程表
      */
-    @PostMapping("/addCourseUserLearn")
+    @PostMapping("/course/addCourseUserLearn")
     public JSONResult addCourseUserLearn(@RequestBody CourseUserLearnDTO courseUserLearnDTO);
 
     /**
@@ -32,7 +32,15 @@ public interface CourseFeignApi {
      * @param courseIds
      * @return
      */
-    @GetMapping("course/rpc/info/{courseIds}")
+    @GetMapping("/course/rpc/info/{courseIds}")
     JSONResult info(@PathVariable String courseIds);
+
+    /**
+     * 获取用户已购买的课程列表
+     * @param loginId 用户登录ID
+     * @return
+     */
+    @GetMapping("/courseUserLearn/myCourses")
+    JSONResult getMyCourses(@RequestParam("loginId") Long loginId);
 
 }

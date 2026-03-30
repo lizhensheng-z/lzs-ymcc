@@ -20,7 +20,8 @@ public class CourseChapterController {
 
     @RequestMapping(value = "/listByCourseId/{id}",method = RequestMethod.GET)
     public JSONResult listByCourseId(@PathVariable("id")Long id){
-        List<CourseChapter> courseChapterList = courseChapterService.listByCourseId(id);
+        // 使用 getCourseChaptersByCourseId 方法，返回包含视频的章节列表
+        List<CourseChapter> courseChapterList = courseChapterService.getCourseChaptersByCourseId(id);
         return JSONResult.success(courseChapterList);
     }
 
