@@ -157,9 +157,12 @@ router.beforeEach((to, from, next) => {
     localStorage.removeItem('expiresTime');
   }
 
-  //从session获取用户
-  let user = JSON.parse(localStorage.getItem('user'));
-  if (!user &&(to.path != '/login' && to.path != '/register') ) {
+  //从session获取用户和token
+  const user = localStorage.getItem('user');
+  const token = localStorage.getItem('U-TOKEN');
+
+  // 检查是否已登录（有token或user）
+  if (!token && !user && (to.path != '/login' && to.path != '/register')) {
     //没有获取到,跳转登录路由地址
     next({ path: '/login' })
   } else {

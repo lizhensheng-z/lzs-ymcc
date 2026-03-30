@@ -13,7 +13,7 @@
         </div>
         <div class="user-info">
           <template v-if="isLoggedIn">
-            <router-link to="/user">我的课程</router-link>
+            <router-link to="/user">个人主页</router-link>
           </template>
           <template v-else>
             <router-link to="/login">登录</router-link>

@@ -13,7 +13,7 @@
         </div>
         <div class="user-info">
           <template v-if="isLoggedIn">
-            <router-link to="/user/courses">我的课程</router-link>
+            <router-link to="/user">个人主页</router-link>
             <span class="username">{{ userInfo.username }}</span>
             <a href="javascript:;" @click="logout">退出</a>
           </template>
