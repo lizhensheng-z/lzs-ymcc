@@ -36,6 +36,10 @@
             <i class="el-icon-s-home"></i>
             <span>用户首页</span>
           </el-menu-item>
+          <el-menu-item index="/user/courses">
+            <i class="el-icon-reading"></i>
+            <span>我的课程</span>
+          </el-menu-item>
           <el-menu-item index="/user/home">
             <i class="el-icon-user"></i>
             <span>欢迎页</span>

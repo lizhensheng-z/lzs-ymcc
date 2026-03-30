@@ -13,7 +13,7 @@
         </div>
         <div class="user-info">
           <template v-if="isLoggedIn">
-            <router-link to="/user">我的课程</router-link>
+            <router-link to="/user/courses">我的课程</router-link>
             <span class="username">{{ userInfo.username }}</span>
             <a href="javascript:;" @click="logout">退出</a>
           </template>
@@ -27,9 +27,15 @@
 
     <!-- 轮播图 -->
     <div class="banner">
-      <el-carousel height="400px">
+      <el-carousel height="400px" :interval="5000" arrow="always">
         <el-carousel-item v-for="(banner, index) in banners" :key="index">
-          <img :src="banner.image" :alt="banner.title">
+          <div class="banner-item" :style="{ background: banner.bg }">
+            <div class="banner-content">
+              <h2>{{ banner.text }}</h2>
+              <p>立即开始学习，提升技能</p>
+              <el-button type="primary" size="large" @click="$router.push('/course/list')">开始学习</el-button>
+            </div>
+          </div>
         </el-carousel-item>
       </el-carousel>
     </div>
@@ -42,8 +48,9 @@
       </div>
       <div class="course-list">
         <div class="course-card" v-for="course in hotCourses" :key="course.id" @click="goDetail(course.id)">
-          <div class="course-img">
-            <img :src="course.image" :alt="course.title">
+          <div class="course-img" :style="course.image ? {} : { background: course.bg }">
+            <img v-if="course.image" :src="course.image" :alt="course.title">
+            <div v-else class="course-placeholder">{{ (course.title || '课').charAt(0) }}</div>
             <div class="course-tag" v-if="course.tag">{{ course.tag }}</div>
           </div>
           <div class="course-info">
@@ -87,8 +94,9 @@ export default {
       isLoggedIn: false,
       userInfo: {},
       banners: [
-        { image: 'https://via.placeholder.com/1200x400/667eea/ffffff?text=云课教育', title: '首页轮播1' },
-        { image: 'https://via.placeholder.com/1200x400/764ba2/ffffff?text=精品课程', title: '首页轮播2' }
+        { image: '', title: '首页轮播1', bg: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', text: '云课教育 - 开启学习之旅' },
+        { image: '', title: '首页轮播2', bg: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', text: '精品课程 等你来学' },
+        { image: '', title: '首页轮播3', bg: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', text: '名师授课 品质保证' }
       ],
       hotCourses: [],
       categories: [
@@ -125,16 +133,36 @@ export default {
       this.$http.get('/course/course/listForUser')
         .then(res => {
           if (res.data.success) {
-            this.hotCourses = (res.data.data || []).slice(0, 8)
+            const courses = (res.data.data || []).slice(0, 8)
+            // 添加背景色
+            const colors = [
+              'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+              'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+              'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+              'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+              'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+              'linear-gradient(135deg, #d299c2 0%, #fef9d7 100%)',
+              'linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%)'
+            ]
+            this.hotCourses = courses.map((c, i) => ({
+              ...c,
+              title: c.name || c.title || '课程',
+              description: c.description || '',
+              image: c.pic || c.image || '',
+              price: c.price || 0,
+              studentCount: c.studentCount || 0,
+              bg: colors[i % colors.length]
+            }))
           }
         })
         .catch(() => {
           // 使用模拟数据
           this.hotCourses = [
-            { id: 1, title: 'Vue.js 实战课程', description: '从入门到精通', price: 99, studentCount: 1234, image: 'https://via.placeholder.com/300x200' },
-            { id: 2, title: 'React 进阶课程', description: '深入理解 React 原理', price: 129, studentCount: 2345, image: 'https://via.placeholder.com/300x200' },
-            { id: 3, title: 'Node.js 全栈开发', description: '打造完整全栈项目', price: 199, studentCount: 3456, image: 'https://via.placeholder.com/300x200' },
-            { id: 4, title: 'Python 入门到实战', description: '零基础学习 Python', price: 0, studentCount: 4567, image: 'https://via.placeholder.com/300x200' }
+            { id: 1, title: 'Vue.js 实战课程', description: '从入门到精通', price: 99, studentCount: 1234, image: '', bg: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
+            { id: 2, title: 'React 进阶课程', description: '深入理解 React 原理', price: 129, studentCount: 2345, image: '', bg: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' },
+            { id: 3, title: 'Node.js 全栈开发', description: '打造完整全栈项目', price: 199, studentCount: 3456, image: '', bg: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' },
+            { id: 4, title: 'Python 入门到实战', description: '零基础学习 Python', price: 0, studentCount: 4567, image: '', bg: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)' }
           ]
         })
     },
@@ -213,10 +241,29 @@ export default {
 }
 
 .banner {
-  img {
+  .banner-item {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .banner-content {
+    text-align: center;
+    color: #fff;
+
+    h2 {
+      font-size: 48px;
+      margin: 0 0 20px;
+      font-weight: bold;
+    }
+
+    p {
+      font-size: 24px;
+      margin: 0 0 30px;
+      opacity: 0.9;
+    }
   }
 }
 
@@ -264,11 +311,21 @@ export default {
   .course-img {
     position: relative;
     height: 160px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
     img {
       width: 100%;
       height: 100%;
       object-fit: cover;
+    }
+
+    .course-placeholder {
+      font-size: 48px;
+      font-weight: bold;
+      color: #fff;
+      opacity: 0.8;
     }
 
     .course-tag {

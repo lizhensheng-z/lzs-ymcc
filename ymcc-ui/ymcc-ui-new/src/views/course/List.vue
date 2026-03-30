@@ -28,10 +28,14 @@
       <div class="filter-bar">
         <div class="filter-item">
           <span class="label">课程分类：</span>
-          <el-select v-model="searchForm.courseTypeId" placeholder="请选择" @change="loadCourses">
-            <el-option label="全部" value=""></el-option>
-            <el-option v-for="item in courseTypes" :key="item.id" :label="item.name" :value="item.id"></el-option>
-          </el-select>
+          <el-cascader
+            v-model="searchForm.courseTypeId"
+            :options="courseTypes"
+            :props="{ value: 'id', label: 'name', children: 'children', checkStrictly: true, expandTrigger: 'hover' }"
+            placeholder="请选择分类"
+            clearable
+            @change="loadCourses"
+          ></el-cascader>
         </div>
         <div class="filter-item">
           <span class="label">课程等级：</span>
@@ -59,8 +63,9 @@
 
       <div class="course-grid">
         <div class="course-card" v-for="course in courses" :key="course.id" @click="goDetail(course.id)">
-          <div class="course-img">
-            <img :src="course.image" :alt="course.title">
+          <div class="course-img" :style="course.image ? {} : { background: course.bg }">
+            <img v-if="course.image" :src="course.image" :alt="course.title">
+            <div v-else class="course-placeholder">{{ (course.title || '课').charAt(0) }}</div>
           </div>
           <div class="course-info">
             <h3>{{ course.title }}</h3>
@@ -98,6 +103,7 @@ export default {
   data() {
     return {
       isLoggedIn: false,
+      userInfo: {},
       courses: [],
       courseTypes: [],
       total: 0,
@@ -119,6 +125,13 @@ export default {
   methods: {
     checkLogin() {
       this.isLoggedIn = !!localStorage.getItem('U-TOKEN')
+      if (this.isLoggedIn) {
+        // 从 localStorage 获取用户信息
+        const user = localStorage.getItem('user')
+        if (user) {
+          this.userInfo = JSON.parse(user)
+        }
+      }
     },
     loadCourseTypes() {
       this.$http.get('/course/courseType/treeData')
@@ -129,10 +142,34 @@ export default {
         })
     },
     loadCourses() {
-      this.$http.post('/course/course/pagelist', this.searchForm)
+      // 处理级联选择器的值，取最后一个选中项
+      const params = { ...this.searchForm }
+      if (params.courseTypeId && Array.isArray(params.courseTypeId)) {
+        params.courseTypeId = params.courseTypeId[params.courseTypeId.length - 1]
+      }
+      this.$http.post('/course/course/pagelist', params)
         .then(res => {
           if (res.data.success) {
-            this.courses = res.data.data.rows || []
+            const colors = [
+              'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+              'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+              'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+              'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+              'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+              'linear-gradient(135deg, #d299c2 0%, #fef9d7 100%)',
+              'linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%)'
+            ]
+            this.courses = (res.data.data.rows || []).map((c, i) => ({
+              ...c,
+              title: c.name,
+              description: c.forUser,
+              image: c.pic,
+              teacherName: c.teacherNames,
+              price: 0,
+              studentCount: c.chapterCount || 0,
+              bg: colors[i % colors.length]
+            }))
             this.total = res.data.data.total || 0
           }
         })
@@ -279,11 +316,21 @@ export default {
 
   .course-img {
     height: 160px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
     img {
       width: 100%;
       height: 100%;
       object-fit: cover;
+    }
+
+    .course-placeholder {
+      font-size: 48px;
+      font-weight: bold;
+      color: #fff;
+      opacity: 0.8;
     }
   }
 

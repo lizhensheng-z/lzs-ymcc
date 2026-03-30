@@ -84,6 +84,13 @@ let routes = [
         meta: { requiresAuth: true }
     },
     {
+        path: '/user/courses',
+        component: UserIndex,
+        name: '我的课程',
+        hidden: false,
+        meta: { requiresAuth: true }
+    },
+    {
         path: '/user/profile',
         component: UserIndex,
         name: '个人资料',

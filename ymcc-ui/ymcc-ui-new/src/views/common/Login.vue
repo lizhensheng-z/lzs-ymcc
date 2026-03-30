@@ -75,9 +75,18 @@ export default {
               const data = res.data.data
               localStorage.setItem('U-TOKEN', data.access_token)
               localStorage.setItem('R-TOKEN', data.refresh_token)
-              localStorage.setItem('expiresTime', data.expiresTime)
-              // 保存用户信息
-              localStorage.setItem('user', JSON.stringify({ username: this.loginForm.username }))
+              // 将秒数转换为过期时间戳
+              const expiresTime = new Date().getTime() + (data.expiresTime || 7200) * 1000
+              localStorage.setItem('expiresTime', expiresTime)
+              // 从 token 中解析用户信息 (JWT payload 是第二部分)
+              try {
+                const payload = JSON.parse(atob(data.access_token.split('.')[1]))
+                const userData = JSON.parse(payload.user_name)
+                localStorage.setItem('user', JSON.stringify(userData))
+              } catch (e) {
+                // 解析失败则只保存用户名
+                localStorage.setItem('user', JSON.stringify({ username: this.loginForm.username }))
+              }
               // 跳转首页
               this.$router.push('/')
             } else {
