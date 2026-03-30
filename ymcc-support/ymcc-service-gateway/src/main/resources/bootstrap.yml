@@ -8,10 +8,10 @@ spring:
   cloud:
     nacos:
       discovery:
-        server-addr: localhost:8848 # 注册中心
+        server-addr: 101.43.63.144:8848 # 注册中心
       config:
-        server-addr: localhost:8848 #配置中心
+        server-addr: 101.43.63.144:8848 #配置中心
         file-extension: yaml #配置文件格式 配置后缀
         prefix: application-gateway #配置前缀 ，默认使用sring.application.name 。。。
         group: DEFAULT_GROUP
-        namespace: 2920bd04-25da-4795-81bf-15949928be71 #命名空间 自定义-geteway
+        namespace: 82c5decb-9649-48ca-9015-153f420aa58f #命名空间 自定义-geteway

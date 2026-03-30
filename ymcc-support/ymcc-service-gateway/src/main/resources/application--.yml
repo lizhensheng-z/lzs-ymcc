@@ -6,7 +6,7 @@ spring:
   cloud: #注册到Nacos
     nacos:
       discovery:
-        server-addr: 127.0.0.1:8848
+        server-addr: 101.43.63.144:8848
     gateway:
       discovery:
         locator:

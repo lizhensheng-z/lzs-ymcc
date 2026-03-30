@@ -6,19 +6,19 @@ spring:
   cloud: #注册到Nacos
     nacos:
       discovery:
-        server-addr: 127.0.0.1:8848
+        server-addr: 101.43.63.144:8848
 #    alibaba:
 #      seata:
 #        tx-service-group: fsp_tx_group #这里和file.conf中事务组名一样
   datasource:
     username: root
     password: 123456
-    url: jdbc:mysql://localhost:3306/ymcc_kill?useSSL=false&serverTimezone=UTC
+    url: jdbc:mysql://101.43.63.144:3306/ymcc_kill?useSSL=false&serverTimezone=UTC
     driver-class-name: com.mysql.cj.jdbc.Driver
     type: com.alibaba.druid.pool.DruidDataSource
   redis:
     database: 0
-    host: 127.0.0.1
+    host: 101.43.63.144
     port: 6379
     jedis:
       pool:
@@ -31,7 +31,7 @@ spring:
 mybatis-plus:
   mapper-locations: classpath:/cn/lzs/ymcc/mapper/*.xml #加载读取mapper.xml文件的位置
 rocketmq:
-  name-server: 47.111.11.238:9876
+  name-server: 101.43.63.144:9876
 
   #生产者配置
   producer:

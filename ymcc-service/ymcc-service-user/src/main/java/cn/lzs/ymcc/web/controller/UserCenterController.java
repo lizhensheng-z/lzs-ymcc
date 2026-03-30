@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Collections;
 
 /**
  * 用户中心接口 - 匹配前端调用路径
@@ -105,12 +106,12 @@ public class UserCenterController {
         UserAccount account = userAccountService.selectById(user.getId());
 
         if (account == null) {
-            return JSONResult.success(List.of());
+            return JSONResult.success(Collections.emptyList());
         }
 
         EntityWrapper<AccountFlow> wrapper = new EntityWrapper<>();
         wrapper.eq("account_id", account.getId());
-        wrapper.orderByDesc("create_time");
+        wrapper.orderBy("create_time", false);
         List<AccountFlow> flows = accountFlowMapper.selectList(wrapper);
         return JSONResult.success(flows);
     }
@@ -149,13 +150,13 @@ public class UserCenterController {
         UserAccount account = userAccountService.selectById(user.getId());
 
         if (account == null) {
-            return JSONResult.success(List.of());
+            return JSONResult.success(Collections.emptyList());
         }
 
         EntityWrapper<AccountFlow> wrapper = new EntityWrapper<>();
         wrapper.eq("account_id", account.getId());
         wrapper.eq("business_type", 1); // 充值类型
-        wrapper.orderByDesc("create_time");
+        wrapper.orderBy("create_time", false);
         List<AccountFlow> flows = accountFlowMapper.selectList(wrapper);
         return JSONResult.success(flows);
     }
@@ -173,7 +174,7 @@ public class UserCenterController {
 
         EntityWrapper<UserAddress> wrapper = new EntityWrapper<>();
         wrapper.eq("user_id", user.getId());
-        wrapper.orderByDesc("default_address");
+        wrapper.orderBy("default_address", false);
         List<UserAddress> addresses = userAddressService.selectList(wrapper);
         return JSONResult.success(addresses);
     }
@@ -191,7 +192,7 @@ public class UserCenterController {
 
         EntityWrapper<UserGrowLog> wrapper = new EntityWrapper<>();
         wrapper.eq("user_id", user.getId());
-        wrapper.orderByDesc("create_time");
+        wrapper.orderBy("create_time", false);
         List<UserGrowLog> logs = userGrowLogMapper.selectList(wrapper);
         return JSONResult.success(logs);
     }
@@ -209,7 +210,7 @@ public class UserCenterController {
 
         EntityWrapper<UserGrowLog> wrapper = new EntityWrapper<>();
         wrapper.eq("user_id", user.getId());
-        wrapper.orderByDesc("create_time");
+        wrapper.orderBy("create_time", false);
         List<UserGrowLog> logs = userGrowLogMapper.selectList(wrapper);
         return JSONResult.success(logs);
     }
@@ -220,7 +221,7 @@ public class UserCenterController {
     @GetMapping("/message/list")
     public JSONResult getMessageList() {
         // TODO: 需要实现消息表和相关服务
-        return JSONResult.success(List.of());
+        return JSONResult.success(Collections.emptyList());
     }
 
     /**
@@ -238,7 +239,7 @@ public class UserCenterController {
     @GetMapping("/refund/list")
     public JSONResult getRefundList() {
         // TODO: 需要实现退款表和相关服务
-        return JSONResult.success(List.of());
+        return JSONResult.success(Collections.emptyList());
     }
 
     /**
@@ -247,7 +248,7 @@ public class UserCenterController {
     @GetMapping("/comment/list")
     public JSONResult getCommentList() {
         // TODO: 需要实现评价表和相关服务
-        return JSONResult.success(List.of());
+        return JSONResult.success(Collections.emptyList());
     }
 
     /**
@@ -256,6 +257,6 @@ public class UserCenterController {
     @GetMapping("/complaint/list")
     public JSONResult getComplaintList() {
         // TODO: 需要实现投诉表和相关服务
-        return JSONResult.success(List.of());
+        return JSONResult.success(Collections.emptyList());
     }
 }

@@ -5,8 +5,8 @@ spring:
     name: service-search   #服务名
   elasticsearch:
     rest:
-      uris: http://localhost:9200
+      uris: 101.43.63.144:9200
   cloud: #注册到Nacos
     nacos:
       discovery:
-        server-addr: 127.0.0.1:8848
+        server-addr: 101.43.63.144:8848
