@@ -15,6 +15,7 @@ import com.baomidou.mybatisplus.plugins.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -123,5 +124,26 @@ public class UserAccountController {
             result.put("points", 0);
         }
         return JSONResult.success(result);
+    }
+
+    /**
+     * 充值
+     * 前端: /user/account/recharge → 网关: /ymcc/user/account/recharge → /account/recharge
+     */
+    @PostMapping("/account/recharge")
+    public JSONResult recharge(@RequestParam BigDecimal amount) {
+        Login login = LoginContext.getLogin();
+        if (login == null) {
+            return JSONResult.error("用户未登录");
+        }
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            return JSONResult.error("充值金额必须大于0");
+        }
+        User user = userService.getUserByLoginId(login.getId());
+        boolean result = userAccountService.recharge(user.getId(), amount);
+        if (result) {
+            return JSONResult.success("充值成功");
+        }
+        return JSONResult.error("充值失败");
     }
 }

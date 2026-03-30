@@ -601,14 +601,69 @@
 							this.$message({ message: error.message,type: 'error'});
 						});
 			},
-			edit(){
-				this.$message({ message: "功能未开放", type: 'error' });
+			edit(row){
+				// 复用新增弹窗，传入数据
+				this.addForm = {
+					id: row.id,
+					name: row.name,
+					forUser: row.forUser,
+					courseTypeId: row.courseTypeId,
+					gradeId: row.gradeId,
+					startTime: row.startTime,
+					endTime: row.endTime,
+					validDays: row.validDays,
+					description: row.description,
+					intro: row.intro,
+					chargeId: row.chargeId,
+					price: row.price,
+					priceOld: row.priceOld,
+					qq: row.qq,
+					pic: row.pic,
+					teacherIds: row.teacherIds
+				};
+				this.addFormVisible = true;
 			},
-			del(){
-				this.$message({ message: "功能未开放", type: 'error' });
+			del(row){
+				this.$confirm('确认删除该课程吗?', '提示', { type: 'warning' }).then(() => {
+					this.listLoading = true;
+					this.$http.delete("/course/course/" + row.id).then(result => {
+						let { success, message, data } = result.data;
+						if (success) {
+							this.$message({ message: "删除成功", type: 'success' });
+							this.getCourses();
+						} else {
+							this.$message({ message: "删除失败[" + message + "]", type: 'error' });
+						}
+						this.listLoading = false;
+					}).catch(error => {
+						this.listLoading = false;
+						this.$message({ message: "删除失败[" + error.message + "]", type: 'error' });
+					})
+				});
 			},
 			batchRemove(){
-				this.$message({ message: "功能未开放", type: 'error' });
+				var ids = this.sels.map(item => item.id);
+				if(ids.length === 0){
+					this.$message({ message: "请选择要删除的数据", type: 'warning' });
+					return;
+				}
+				this.$confirm('确认删除选中课程吗？', '提示', { type: 'warning' }).then(() => {
+					this.listLoading = true;
+					let deletePromises = ids.map(id => this.$http.delete("/course/course/" + id));
+					Promise.all(deletePromises).then(results => {
+						let allSuccess = results.every(result => result.data.success);
+						if(allSuccess){
+							this.$message({ message: "批量删除成功", type: 'success' });
+						}else{
+							this.$message({ message: "部分删除失败", type: 'error' });
+						}
+						this.getCourses();
+						this.listLoading = false;
+					}).catch(error => {
+						this.listLoading = false;
+						this.$message({ message: "批量删除失败["+error.message+"]", type: 'error' });
+					})
+				})
 			},
 			selsChange(sels){
 				this.sels = sels;

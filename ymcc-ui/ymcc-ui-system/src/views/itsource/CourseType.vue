@@ -80,25 +80,212 @@
         </el-dialog>
     </div>
 </template>
-<style>
-    .el-row {
-        margin-bottom: 20px;
-        height: 100%;
+<style lang="scss">
+.el-row {
+    margin-bottom: 20px;
+    height: 100%;
+}
+:last-child {
+    margin-bottom: 0;
+}
+
+// 左侧树形结构样式
+.el-tree {
+    background: transparent;
+    padding: 16px;
+
+    .el-tree-node {
+        &:focus > .el-tree-node__content {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        }
+
+        .el-tree-node__content {
+            height: 40px;
+            border-radius: 6px;
+            transition: all 0.3s;
+            margin-bottom: 4px;
+
+            &:hover {
+                background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            }
+        }
+
+        &.is-current > .el-tree-node__content {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+            color: #667eea;
+            font-weight: 500;
+        }
     }
-    :last-child {
+}
+
+.grid-content {
+    border-radius: 8px;
+    min-height: 36px;
+}
+
+.toolbar {
+    margin: 0px;
+    background: #fff;
+    border-radius: 8px;
+    padding: 16px 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+    .el-form-item {
         margin-bottom: 0;
     }
-    #courseType el-col {
-        border: 1px solid red;
-        border-radius: 4px;
+
+    .el-input__inner {
+        border-radius: 6px;
+        transition: all 0.3s;
+
+        &:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+        }
     }
-    .grid-content {
-        border-radius: 4px;
-        min-height: 36px;
+
+    .el-button {
+        border-radius: 6px;
+        font-weight: 500;
+        transition: all 0.3s;
+
+        &:hover {
+            transform: translateY(-1px);
+        }
     }
-    .toolbar{
-        margin: 0px;
+}
+
+// 表格样式
+.el-table {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+    &::before {
+        display: none;
     }
+
+    .el-table__header-wrapper {
+        .el-table__header {
+            th {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+                color: #fff !important;
+                font-weight: 500;
+                padding: 14px 0;
+                border-bottom: none !important;
+
+                .cell {
+                    font-size: 14px;
+                }
+            }
+        }
+    }
+
+    .el-table__body-wrapper {
+        .el-table__row {
+            transition: all 0.3s;
+
+            &:hover {
+                background-color: #f5f7fa !important;
+            }
+
+            td {
+                padding: 12px 0;
+                border-bottom: 1px solid #ebeef5;
+            }
+        }
+    }
+}
+
+// 分页样式
+.el-pagination {
+    margin-top: 16px;
+
+    .btn-prev, .btn-next {
+        border-radius: 6px;
+    }
+
+    .el-pager li {
+        border-radius: 6px;
+        font-weight: 500;
+        transition: all 0.3s;
+
+        &.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        &:hover {
+            color: #667eea;
+        }
+    }
+}
+
+// 弹窗样式
+.el-dialog {
+    border-radius: 12px;
+    overflow: hidden;
+
+    .el-dialog__header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 18px 24px;
+        margin-right: 0;
+
+        .el-dialog__title {
+            color: #fff;
+            font-weight: 600;
+            font-size: 18px;
+        }
+
+        .el-dialog__headerbtn {
+            top: 18px;
+            right: 20px;
+
+            .el-dialog__close {
+                color: rgba(255, 255, 255, 0.8);
+                font-size: 18px;
+                transition: all 0.3s;
+
+                &:hover {
+                    color: #fff;
+                    transform: rotate(90deg);
+                }
+            }
+        }
+    }
+
+    .el-dialog__body {
+        padding: 24px;
+
+        .el-form-item {
+            .el-form-item__label {
+                font-weight: 500;
+                color: #606266;
+            }
+
+            .el-input__inner {
+                border-radius: 6px;
+                transition: all 0.3s;
+
+                &:focus {
+                    border-color: #667eea;
+                    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+                }
+            }
+        }
+    }
+
+    .el-dialog__footer {
+        padding: 16px 24px;
+        border-top: 1px solid #ebeef5;
+        background: #fafafa;
+
+        .el-button {
+            border-radius: 6px;
+            padding: 10px 24px;
+            font-weight: 500;
+        }
+    }
+}
 </style>
 
 <script>
@@ -161,10 +348,40 @@
                 this.getList();
             },
             batchRemove(){
-
+                var ids = this.sels.map(item => item.id);
+                if(ids.length === 0){
+                    this.$message({ message: "请选择要删除的数据", type: 'warning' });
+                    return;
+                }
+                this.$confirm('确认删除选中分类吗？', '提示', { type: 'warning' }).then(() => {
+                    this.listLoading = true;
+                    let deletePromises = ids.map(id => this.$http.delete("/course/courseType/" + id));
+                    Promise.all(deletePromises).then(results => {
+                        let allSuccess = results.every(result => result.data.success);
+                        if(allSuccess){
+                            this.$message({ message: "批量删除成功", type: 'success' });
+                        }else{
+                            this.$message({ message: "部分删除失败", type: 'error' });
+                        }
+                        this.getTreeData();
+                        this.getList();
+                        this.listLoading = false;
+                    }).catch(error => {
+                        this.listLoading = false;
+                        this.$message({ message: "批量删除失败["+error.message+"]", type: 'error' });
+                    })
+                })
             },
-            handleEdit(){
-
+            handleEdit(index, row){
+                this.addForm = {
+                    id: row.id,
+                    name: row.name,
+                    logo: row.logo,
+                    sortIndex: row.sortIndex,
+                    description: row.description,
+                    pid: row.pid
+                };
+                this.addFormVisible = true;
             },
           handleDel(index, row) {
             this.$confirm('确认删除该记录吗?', '提示', {

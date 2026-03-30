@@ -1,25 +1,259 @@
 /*全局样式配置*/
-.el-table .row-bg-red{
-  background: #ffdfe0;
+
+/* 表格行背景色 */
+.el-table .row-bg-red {
+  background: linear-gradient(135deg, rgba(255, 77, 79, 0.1) 0%, rgba(255, 107, 107, 0.1) 100%);
 }
-.el-table .row-bg-green{
-  background: #eefff1;
+
+.el-table .row-bg-green {
+  background: linear-gradient(135deg, rgba(82, 196, 26, 0.1) 0%, rgba(56, 158, 13, 0.1) 100%);
 }
-/*.el-table .row-bg-blue{*/
-/*background: #ebe8ff;*/
-/*}*/
-.el-table td, .el-table th{
-  padding: 4px 0;
+
+.el-table .row-bg-blue {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
 }
-.el-tag{
-  height: 25px;
-  line-height: 25px;
+
+/* 表格单元格样式 */
+.el-table td, .el-table th {
+  padding: 12px 0;
 }
-.el-button{
-  padding: 10px 14px;
-  font-size: 12px;
+
+/* 标签样式 */
+.el-tag {
+  height: 26px;
+  line-height: 26px;
   border-radius: 4px;
+  border: none;
+  padding: 0 12px;
 }
-input{
+
+/* 按钮样式 */
+.el-button {
+  padding: 10px 16px;
+  font-size: 13px;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.el-button:hover {
+  transform: translateY(-1px);
+}
+
+.el-button:active {
+  transform: translateY(0);
+}
+
+/* 输入框样式 */
+input {
   padding: 0 15px;
+  border-radius: 6px;
+  transition: all 0.3s;
+}
+
+input:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+}
+
+/* 加载动画优化 */
+.el-loading-spinner {
+  .circular {
+    width: 42px;
+    height: 42px;
+  }
+
+  .path {
+    stroke: #667eea;
+  }
+}
+
+/* 确认框样式 */
+.el-message-box {
+  border-radius: 12px;
+  overflow: hidden;
+  border: none;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+
+  .el-message-box__header {
+    padding: 18px 24px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+    .el-message-box__title {
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .el-message-box__headerbtn {
+      top: 18px;
+      right: 20px;
+
+      .el-message-box__close {
+        color: rgba(255, 255, 255, 0.8);
+
+        &:hover {
+          color: #fff;
+        }
+      }
+    }
+  }
+
+  .el-message-box__content {
+    padding: 24px;
+  }
+
+  .el-message-box__btns {
+    padding: 16px 24px;
+    border-top: 1px solid #ebeef5;
+
+    .el-button {
+      border-radius: 6px;
+      padding: 10px 24px;
+    }
+  }
+}
+
+/* 通知消息样式 */
+.el-notification {
+  border-radius: 8px;
+  border: none;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+
+  .el-notification__title {
+    font-weight: 600;
+  }
+}
+
+/* 气泡确认框样式 */
+.el-popconfirm {
+  .el-popconfirm__main {
+    margin-bottom: 10px;
+  }
+}
+
+/* 空状态样式 */
+.el-empty {
+  padding: 40px 0;
+
+  .el-empty__image {
+    width: 120px;
+    height: 120px;
+  }
+
+  .el-empty__description {
+    color: #909399;
+    font-size: 14px;
+  }
+}
+
+/* 骨架屏样式 */
+.el-skeleton {
+  .el-skeleton__item {
+    border-radius: 6px;
+  }
+}
+
+/* 时间线样式 */
+.el-timeline-item {
+  .el-timeline-item__node {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+
+  .el-timeline-item__tail {
+    border-left-color: #e4e7ed;
+  }
+}
+
+/* 描述列表样式 */
+.el-descriptions {
+  .el-descriptions__title {
+    font-weight: 600;
+    color: #303133;
+  }
+
+  .el-descriptions__body {
+    .el-descriptions__table {
+      border-radius: 8px;
+      overflow: hidden;
+    }
+  }
+}
+
+/* 结果页样式 */
+.el-result {
+  .el-result__icon {
+    svg {
+      width: 80px;
+      height: 80px;
+    }
+  }
+
+  .el-result__title {
+    font-size: 20px;
+    font-weight: 600;
+  }
+}
+
+/* 步骤条样式 */
+.el-steps {
+  .el-step__head.is-finish {
+    color: #667eea;
+    border-color: #667eea;
+  }
+
+  .el-step__title.is-finish {
+    color: #667eea;
+  }
+
+  .el-step__head.is-process {
+    color: #764ba2;
+    border-color: #764ba2;
+  }
+}
+
+/* 抽屉样式 */
+.el-drawer {
+  .el-drawer__header {
+    padding: 18px 24px;
+    margin-bottom: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+
+    .el-drawer__title {
+      font-weight: 600;
+      font-size: 18px;
+    }
+
+    .el-drawer__close-btn {
+      color: rgba(255, 255, 255, 0.8);
+
+      &:hover {
+        color: #fff;
+      }
+    }
+  }
+
+  .el-drawer__body {
+    padding: 24px;
+  }
+}
+
+/* 图片查看器样式 */
+.el-image-viewer__wrapper {
+  .el-image-viewer__close {
+    .el-icon-circle-close {
+      color: #fff;
+      font-size: 24px;
+    }
+  }
+}
+
+/* 回到顶部样式 */
+.el-backtop {
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+
+  &:hover {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
 }

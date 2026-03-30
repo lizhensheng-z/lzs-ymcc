@@ -84,4 +84,23 @@ public class KillActivityServiceImpl extends ServiceImpl<KillActivityMapper, Kil
         }
     }
 
+    /**
+     * 下架秒杀活动
+     * @param activityId
+     */
+    @Override
+    public void unpublish(Long activityId) {
+        // 参数校验
+        KillActivity killActivity = selectById(activityId);
+        AssertUtil.isNotNull(killActivity, GlobalExceptionCode.SERVICE_PARAM_IS_NULL.getMessage());
+
+        // 修改活动状态为下架
+        killActivity.setPublishStatus(KillActivity.ACTIVITY_UNPUBLISH);
+        updateById(killActivity);
+
+        // 清除Redis中的相关数据
+        String daKey = "activity:" + activityId;
+        redisTemplate.delete(daKey);
+    }
+
 }

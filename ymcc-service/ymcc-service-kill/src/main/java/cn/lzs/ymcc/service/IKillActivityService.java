@@ -17,4 +17,10 @@ public interface IKillActivityService extends IService<KillActivity> {
      * @param activityId
      */
     void publish(Long activityId);
+
+    /**
+     * 下架秒杀活动
+     * @param activityId
+     */
+    void unpublish(Long activityId);
 }

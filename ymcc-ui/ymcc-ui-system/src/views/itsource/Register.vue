@@ -317,41 +317,175 @@
 </script>
 
 <style lang="scss" scoped>
-  .login-container {
-    -webkit-border-radius: 5px;
-    border-radius: 5px;
-    -moz-border-radius: 5px;
-    background-clip: padding-box;
-    margin: 180px auto;
-    width: 500px;
-    padding: 35px 35px 15px 35px;
-    background: #fff;
-    border: 1px solid #eaeaea;
-    box-shadow: 0 0 25px #cac6c6;
-    .title {
-      margin: 0px auto 40px auto;
-      text-align: center;
-      color: #505458;
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.login-container {
+  margin: 40px auto;
+  width: 560px;
+  padding: 40px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 20px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(10px);
+  animation: float 6s ease-in-out infinite;
+
+  .title {
+    margin: 0px auto 30px auto;
+    text-align: center;
+    font-size: 28px;
+    font-weight: 600;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  ::v-deep .el-form-item {
+    margin-bottom: 22px;
+
+    .el-form-item__label {
+      font-weight: 500;
+      color: #606266;
     }
-    .remember {
-      margin: 0px 0px 35px 0px;
+
+    .el-input__inner {
+      border-radius: 8px;
+      height: 42px;
+      line-height: 42px;
+      transition: all 0.3s;
+
+      &:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
     }
   }
 
-  .map {
+  ::v-deep .el-button--primary {
     width: 100%;
-    height: 300px;
-  }
-  .searchinput{
-    width: 300px;
-    box-sizing: border-box;
-    padding: 9px;
-    border: 1px solid #dddee1;
-    line-height: 20px;
+    height: 46px;
+    border-radius: 10px;
     font-size: 16px;
-    height: 38px;
-    color: #333;
-    position: relative;
-    border-radius: 4px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    transition: all 0.3s;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
   }
+
+  ::v-deep .el-select {
+    width: 100%;
+
+    .el-input__inner {
+      border-radius: 8px;
+    }
+  }
+
+  ::v-deep .upload-demo {
+    .el-button {
+      border-radius: 8px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      transition: all 0.3s;
+
+      &:hover {
+        transform: translateY(-1px);
+      }
+    }
+
+    .el-upload__tip {
+      color: #909399;
+      font-size: 12px;
+    }
+  }
+}
+
+.map {
+  width: 100%;
+  height: 300px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.searchinput {
+  width: 300px;
+  box-sizing: border-box;
+  padding: 10px 15px;
+  border: 1px solid #dcdfe6;
+  line-height: 20px;
+  font-size: 14px;
+  height: 42px;
+  color: #333;
+  position: relative;
+  border-radius: 8px;
+  transition: all 0.3s;
+
+  &:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    outline: none;
+  }
+}
+
+// 弹窗样式
+::v-deep .el-dialog {
+  border-radius: 12px;
+  overflow: hidden;
+
+  .el-dialog__header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 18px 24px;
+
+    .el-dialog__title {
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .el-dialog__headerbtn {
+      top: 18px;
+      right: 20px;
+
+      .el-dialog__close {
+        color: rgba(255, 255, 255, 0.8);
+
+        &:hover {
+          color: #fff;
+        }
+      }
+    }
+  }
+
+  .el-dialog__body {
+    padding: 24px;
+  }
+
+  .el-dialog__footer {
+    padding: 16px 24px;
+    border-top: 1px solid #ebeef5;
+
+    .el-button {
+      border-radius: 6px;
+      padding: 10px 24px;
+    }
+  }
+}
 </style>

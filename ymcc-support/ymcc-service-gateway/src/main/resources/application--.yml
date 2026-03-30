@@ -73,6 +73,12 @@ spring:
             - Path=/ymcc/common/**    #服务访问路径
           filters:
             - StripPrefix=2
+        - id: application-common-station #指定服务名
+          uri: lb://service-common #去注册中心找这个服务名
+          predicates:    #断言，匹配访问的路径
+            - Path=/ymcc/user/stationMessage/**    #服务访问路径
+          filters:
+            - StripPrefix=2
       globalcors: #跨域配置 在Gateway解决跨域问题
         cors-configurations:
           '[/**]':

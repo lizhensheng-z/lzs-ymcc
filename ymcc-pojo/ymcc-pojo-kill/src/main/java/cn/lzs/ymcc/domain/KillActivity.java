@@ -12,10 +12,12 @@ import java.util.Date;
 
 @TableName("t_kill_activity")
 public class KillActivity extends Model<KillActivity> {
-      //  0待发布，1已发布 ，2已取消
+      //  0待发布，1已发布 ，2已取消/下架
     public static final Integer ACTIVITY_WAIT_PUBLISH = 0;
     public static final Integer ACTIVITY_PUBLISH = 1;
     public static final Integer ACTIVITY_CANCE_PUBLISH = 2;
+    // 下架状态别名
+    public static final Integer ACTIVITY_UNPUBLISH = 2;
 
     private static final long serialVersionUID = 1L;
 

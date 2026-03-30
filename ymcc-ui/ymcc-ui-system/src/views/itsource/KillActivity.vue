@@ -139,14 +139,26 @@
 
       // 活动下架
       UnPublish(row){
-
+        this.$confirm('确认下架该活动吗?', '提示', { type: 'warning' }).then(() => {
+          this.$http.post("/kill/killActivity/unpublish/" + row.id).then(result=>{
+            let {success,message,code} = result.data;
+            if(success){
+              this.$message({ message: "下架成功", type: 'success' });
+              this.getTableData();
+            }else{
+              this.$message({ message: "下架失败["+message+"]", type: 'error' });
+            }
+          }).catch(error => {
+            this.$message({ message: "操作失败["+error.message+"]", type: 'error' });
+          })
+        });
       },
 
 			//start 表格相关============================================================================================
 			selsChange: function (sels) {
 				this.sels = sels;
 			},
-			//性别显示转换
+			//状态显示转换
 			formatStatus: function (row, column) {
 				return row.publishStatus == 1 ? '已发布' : row.publishStatus == 0 ? '未发布' : '下架';
 			},
@@ -181,11 +193,22 @@
 			//显示新增界面
 			add: function () {
 				this.addFormVisible = true;
-				for(let p in this.addForm){
-					this.addForm[p] = '';
-				}
-				this.addForm.sex = -1;
-				this.addForm.age = 0;
+				this.addForm = {
+					id: '',
+					name: '',
+					startTime: "",
+					endTime: ""
+				};
+			},
+			//显示编辑界面
+			edit: function (row) {
+				this.addForm = {
+					id: row.id,
+					name: row.name,
+					startTime: row.startTime,
+					endTime: row.endTime
+				};
+				this.addFormVisible = true;
 			},
 			//新增
 			addSubmit: function () {
@@ -214,19 +237,48 @@
 
      // 删除活动操作
       del(row){
-        let id = row.id
-        this.$http.post("/kill/killActivity/delete/" + id).then(result=>{
-          let {success,message,code} = result.data;
-          if(success){
-            this.$message({ message: "删除成功", type: 'success' });
-          }else{
-            this.$message({ message: "删除失败["+message+"]", type: 'error' });
-          }
-          this.getTableData();
-        }).catch(error => {
-          this.$message({ message: "数据加载失败["+error.message+"]", type: 'error' });
-        })
-      }
+        this.$confirm('确认删除该活动吗?', '提示', { type: 'warning' }).then(() => {
+          this.listLoading = true;
+          this.$http.delete("/kill/killActivity/" + row.id).then(result=>{
+            let {success,message,code} = result.data;
+            if(success){
+              this.$message({ message: "删除成功", type: 'success' });
+            }else{
+              this.$message({ message: "删除失败["+message+"]", type: 'error' });
+            }
+            this.getTableData();
+            this.listLoading = false;
+          }).catch(error => {
+            this.listLoading = false;
+            this.$message({ message: "删除失败["+error.message+"]", type: 'error' });
+          })
+        });
+      },
+			//批量删除
+			batchRemove: function () {
+				var ids = this.sels.map(item => item.id);
+				if(ids.length === 0){
+					this.$message({ message: "请选择要删除的数据", type: 'warning' });
+					return;
+				}
+				this.$confirm('确认删除选中记录吗？', '提示', { type: 'warning' }).then(() => {
+					this.listLoading = true;
+					let deletePromises = ids.map(id => this.$http.delete("/kill/killActivity/" + id));
+					Promise.all(deletePromises).then(results => {
+						let allSuccess = results.every(result => result.data.success);
+						if(allSuccess){
+							this.$message({ message: "批量删除成功", type: 'success' });
+						}else{
+							this.$message({ message: "部分删除失败", type: 'error' });
+						}
+						this.getTableData();
+						this.listLoading = false;
+					}).catch(error => {
+						this.listLoading = false;
+						this.$message({ message: "批量删除失败["+error.message+"]", type: 'error' });
+					})
+				})
+			}
 
 		},
 		mounted() {

@@ -13,4 +13,18 @@
         <result column="user_id" property="userId" />
     </resultMap>
 
+    <!-- 根据用户ID查询消息列表 -->
+    <select id="selectByUserId" resultMap="BaseResultMap">
+        SELECT * FROM t_message_station
+        WHERE user_id = #{userId}
+        ORDER BY send_time DESC
+    </select>
+
+    <!-- 标记用户所有消息为已读 -->
+    <update id="markAllAsRead">
+        UPDATE t_message_station
+        SET isread = 1
+        WHERE user_id = #{userId} AND isread = 0
+    </update>
+
 </mapper>

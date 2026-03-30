@@ -29,6 +29,17 @@ public class KillActivityController {
     }
 
     /**
+     * 秒杀活动下架
+     * @param activityId
+     * @return
+     */
+    @PostMapping("/unpublish/{activityId}")
+    public JSONResult unpublish(@PathVariable Long activityId){
+        killActivityService.unpublish(activityId);
+        return JSONResult.success();
+    }
+
+    /**
      * 保存和修改公用的
      */
     @RequestMapping(value="/save",method= RequestMethod.POST)
@@ -44,7 +55,7 @@ public class KillActivityController {
     /**
      * 删除对象
      */
-    @PostMapping("delete/{id}")
+    @RequestMapping(value = "/{id}",method = RequestMethod.DELETE)
     public JSONResult delete(@PathVariable("id") Long id){
         killActivityService.deleteById(id);
         return JSONResult.success();

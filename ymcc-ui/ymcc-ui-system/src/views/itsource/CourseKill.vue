@@ -57,11 +57,17 @@
 		</el-col>
 
 
-		<!--新增界面-->
-		<el-dialog title="新增" :visible.sync="addFormVisible" :close-on-click-modal="false">
-			<el-form :model="addForm" label-width="80px" :rules="addFormRules" ref="addForm">
-				<el-form-item label="姓名" prop="name">
-					<el-input v-model="addForm.name" auto-complete="off"></el-input>
+		<!--新增/编辑界面-->
+		<el-dialog :title="addForm.id ? '编辑秒杀课程' : '新增秒杀课程'" :visible.sync="addFormVisible" :close-on-click-modal="false">
+			<el-form :model="addForm" label-width="100px" :rules="addFormRules" ref="addForm">
+				<el-form-item label="课程名称" prop="courseName">
+					<el-input v-model="addForm.courseName" auto-complete="off" disabled></el-input>
+				</el-form-item>
+				<el-form-item label="秒杀价格" prop="killPrice">
+					<el-input v-model="addForm.killPrice" type="number" auto-complete="off"></el-input>
+				</el-form-item>
+				<el-form-item label="秒杀数量" prop="killCount">
+					<el-input v-model="addForm.killCount" type="number" auto-complete="off"></el-input>
 				</el-form-item>
 			</el-form>
 			<div slot="footer" class="dialog-footer">
@@ -90,17 +96,24 @@
 				addFormVisible: false,
 				addLoading: false,
 				addFormRules: {
-					name: [
-						{ required: true, message: '请输入姓名', trigger: 'blur' }
+					killPrice: [
+						{ required: true, message: '请输入秒杀价格', trigger: 'blur' }
+					],
+					killCount: [
+						{ required: true, message: '请输入秒杀数量', trigger: 'blur' }
 					]
 				},
 				//新增界面数据
 				addForm: {
-					name: '',
-					sex: -1,
-					age: 0,
-					birth: '',
-					addr: ''
+					id: '',
+					courseId: '',
+					courseName: '',
+					coursePic: '',
+					activityId: '',
+					killPrice: '',
+					killCount: '',
+					startTime: '',
+					endTime: ''
 				}
 
 			}
@@ -110,9 +123,9 @@
 			selsChange: function (sels) {
 				this.sels = sels;
 			},
-			//性别显示转换
+			//状态显示转换
 			formatStatus: function (row, column) {
-				return row.publishStatus == 1 ? '已发布' : row.publishStatus== 0 ? '未发布' : '未知';
+				return row.killStatus == 1 ? '已发布' : row.killStatus == 0 ? '未发布' : '未知';
 			},
 			selectPage(val) {
 				this.page = val;
@@ -164,19 +177,33 @@
 			},
 			//显示编辑界面
 			edit: function (row) {
-				for(let p in this.addForm){
-					this.addForm[p] = row[p];
-				}
+				this.addForm = {
+					id: row.id,
+					courseId: row.courseId,
+					courseName: row.courseName,
+					coursePic: row.coursePic,
+					activityId: row.activityId,
+					killPrice: row.killPrice,
+					killCount: row.killCount,
+					startTime: row.startTime,
+					endTime: row.endTime
+				};
 				this.addFormVisible = true;
 			},
 			//显示新增界面
 			add: function () {
 				this.addFormVisible = true;
-				for(let p in this.addForm){
-					this.addForm[p] = '';
-				}
-				this.addForm.sex = -1;
-				this.addForm.age = 0;
+				this.addForm = {
+					id: '',
+					courseId: '',
+					courseName: '',
+					coursePic: '',
+					activityId: '',
+					killPrice: '',
+					killCount: '',
+					startTime: '',
+					endTime: ''
+				};
 			},
 			//新增
 			addSubmit: function () {

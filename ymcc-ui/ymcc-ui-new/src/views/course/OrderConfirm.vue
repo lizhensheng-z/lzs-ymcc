@@ -158,7 +158,7 @@ export default {
       this.submitting = true
 
       // 创建订单
-      this.$http.post('/order/order/create', {
+      this.$http.post('/order/placeOrder', {
         userId: this.userInfo.id,
         courses: this.courses.map(c => ({
           courseId: c.id,

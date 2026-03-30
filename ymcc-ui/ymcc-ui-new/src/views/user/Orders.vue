@@ -85,7 +85,7 @@
           <!-- 订单列表 -->
           <el-table :data="orders" v-loading="loading" style="width: 100%">
             <el-table-column prop="orderNo" label="订单号" width="200"></el-table-column>
-            <el-table-column prop="title" label="课程名称"></el-table-column>
+            <el-table-column prop="title" label="购买记录"></el-table-column>
             <el-table-column prop="totalAmount" label="金额" width="100">
               <template slot-scope="scope">
                 <span class="price">¥{{ scope.row.totalAmount }}</span>

@@ -103,6 +103,13 @@
             </div>
           </div>
 
+          <!-- 充值按钮 -->
+          <div class="recharge-section">
+            <el-button type="primary" size="large" @click="showRechargeDialog">
+              <i class="el-icon-plus"></i> 充值
+            </el-button>
+          </div>
+
           <!-- 账户明细 -->
           <div class="section">
             <h3>账户明细</h3>
@@ -138,6 +145,26 @@
       </div>
     </div>
 
+    <!-- 充值弹窗 -->
+    <el-dialog title="账户充值" :visible.sync="rechargeDialogVisible" width="500px">
+      <el-form :model="rechargeForm" label-width="80px">
+        <el-form-item label="充值金额">
+          <el-input v-model.number="rechargeForm.amount" placeholder="请输入充值金额" type="number">
+            <template slot="prepend">¥</template>
+          </el-input>
+        </el-form-item>
+        <el-form-item label="快速选择">
+          <el-button v-for="amt in quickAmounts" :key="amt" @click="rechargeForm.amount = amt" :type="rechargeForm.amount === amt ? 'primary' : 'default'">
+            ¥{{ amt }}
+          </el-button>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="rechargeDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleRecharge" :loading="rechargeLoading">确认充值</el-button>
+      </span>
+    </el-dialog>
+
     <!-- 底部 -->
     <div class="footer">
       <p>&copy; 2024 云课教育 版权所有</p>
@@ -158,7 +185,14 @@ export default {
         frozenAmount: 0
       },
       accountLogs: [],
-      loading: false
+      loading: false,
+      // 充值相关
+      rechargeDialogVisible: false,
+      rechargeForm: {
+        amount: 100
+      },
+      rechargeLoading: false,
+      quickAmounts: [50, 100, 200, 500, 1000]
     }
   },
   mounted() {
@@ -201,6 +235,33 @@ export default {
     formatTime(time) {
       if (!time) return '-'
       return new Date(time).toLocaleString()
+    },
+    showRechargeDialog() {
+      this.rechargeForm.amount = 100
+      this.rechargeDialogVisible = true
+    },
+    handleRecharge() {
+      if (!this.rechargeForm.amount || this.rechargeForm.amount <= 0) {
+        this.$message.error('请输入正确的充值金额')
+        return
+      }
+      this.rechargeLoading = true
+      this.$http.post('/user/userAccount/account/recharge?amount=' + this.rechargeForm.amount)
+        .then(res => {
+          if (res.data.success) {
+            this.$message.success('充值成功')
+            this.rechargeDialogVisible = false
+            this.loadAccountInfo()
+          } else {
+            this.$message.error(res.data.message || '充值失败')
+          }
+        })
+        .catch(() => {
+          this.$message.error('充值失败')
+        })
+        .finally(() => {
+          this.rechargeLoading = false
+        })
     },
     logout() {
       localStorage.clear()
@@ -386,6 +447,11 @@ export default {
       }
     }
   }
+}
+
+.recharge-section {
+  margin: 20px 0;
+  text-align: center;
 }
 
 .section {
