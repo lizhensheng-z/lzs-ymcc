@@ -277,12 +277,14 @@ export default {
       }
     },
     saveProgress(videoId) {
-      // 保存学习进度到后端
+      // 保存学习进度到后端（可选功能，静默失败）
       this.$http.post('/user/userCourse/saveProgress', {
         courseId: this.courseId,
         videoId: videoId,
         userId: this.userInfo.id
-      }).catch(() => {})
+      }).catch(() => {
+        // 静默处理，不显示错误
+      })
     },
     onVideoEnded() {
       this.$message.success('视频播放完成')

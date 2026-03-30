@@ -7,6 +7,9 @@ import CourseDetail from './views/course/Detail.vue'
 import CourseCart from './views/course/Cart.vue'
 import UserIndex from './views/user/Index.vue'
 import UserCourses from './views/user/Courses.vue'
+import UserHome from './views/user/Home.vue'
+import Profile from './views/user/Profile.vue'
+import Orders from './views/user/Orders.vue'
 import CourseLearn from './views/user/CourseLearn.vue'
 import OrderConfirm from './views/course/OrderConfirm.vue'
 import OrderSuccess from './views/course/OrderSuccess.vue'
@@ -97,7 +100,7 @@ let routes = [
     },
     {
         path: '/user/home',
-        component: UserIndex,
+        component: UserHome,
         name: '欢迎页',
         hidden: false,
         meta: { requiresAuth: true }
@@ -118,7 +121,7 @@ let routes = [
     },
     {
         path: '/user/profile',
-        component: UserIndex,
+        component: Profile,
         name: '个人资料',
         hidden: false,
         meta: { requiresAuth: true }
@@ -132,7 +135,7 @@ let routes = [
     },
     {
         path: '/user/orders',
-        component: UserIndex,
+        component: Orders,
         name: '我的订单',
         hidden: false,
         meta: { requiresAuth: true }
@@ -141,13 +144,6 @@ let routes = [
         path: '/user/account',
         component: UserIndex,
         name: '资金账户',
-        hidden: false,
-        meta: { requiresAuth: true }
-    },
-    {
-        path: '/user/points',
-        component: UserIndex,
-        name: '我的积分',
         hidden: false,
         meta: { requiresAuth: true }
     },

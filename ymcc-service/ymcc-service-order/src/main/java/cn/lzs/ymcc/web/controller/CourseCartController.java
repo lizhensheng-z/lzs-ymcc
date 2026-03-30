@@ -49,8 +49,8 @@ public class CourseCartController {
      * @param loginId 用户ID
      * @return 购物车列表
      */
-    @GetMapping("/list")
-    public JSONResult list(@RequestParam Long loginId) {
+    @GetMapping("/list/{loginId}")
+    public JSONResult list(@PathVariable Long loginId) {
         if (loginId == null) {
             return JSONResult.error("用户ID不能为空");
         }

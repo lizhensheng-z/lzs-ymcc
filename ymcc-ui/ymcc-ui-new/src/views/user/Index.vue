@@ -60,10 +60,6 @@
             <i class="el-icon-wallet"></i>
             <span>资金账户</span>
           </el-menu-item>
-          <el-menu-item index="/user/points">
-            <i class="el-icon-coin"></i>
-            <span>我的积分</span>
-          </el-menu-item>
           <el-menu-item index="/user/msg">
             <i class="el-icon-message"></i>
             <span>我的消息</span>
@@ -93,10 +89,6 @@
             <div class="stat-item">
               <div class="stat-value">{{ stats.courseCount }}</div>
               <div class="stat-label">课程数</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-value">{{ stats.points }}</div>
-              <div class="stat-label">积分</div>
             </div>
             <div class="stat-item">
               <div class="stat-value">¥{{ stats.balance }}</div>
@@ -133,20 +125,24 @@
           </div>
           <el-table :data="recentOrders" style="width: 100%">
             <el-table-column prop="orderNo" label="订单号" width="180"></el-table-column>
-            <el-table-column prop="courseName" label="课程"></el-table-column>
-            <el-table-column prop="amount" label="金额" width="100">
+            <el-table-column prop="title" label="课程"></el-table-column>
+            <el-table-column prop="totalAmount" label="金额" width="100">
               <template slot-scope="scope">
-                ¥{{ scope.row.amount }}
+                ¥{{ scope.row.totalAmount }}
               </template>
             </el-table-column>
-            <el-table-column prop="status" label="状态" width="100">
+            <el-table-column prop="statusOrder" label="状态" width="100">
               <template slot-scope="scope">
-                <el-tag :type="scope.row.status === 1 ? 'success' : 'warning'">
-                  {{ scope.row.status === 1 ? '已完成' : '待支付' }}
+                <el-tag :type="scope.row.statusOrder === 4 ? 'success' : 'warning'">
+                  {{ scope.row.statusOrder === 4 ? '已完成' : '待支付' }}
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column prop="createTime" label="时间"></el-table-column>
+            <el-table-column prop="createTime" label="时间">
+              <template slot-scope="scope">
+                {{ new Date(scope.row.createTime).toLocaleString() }}
+              </template>
+            </el-table-column>
           </el-table>
         </div>
 
@@ -185,7 +181,6 @@ export default {
       stats: {
         orderCount: 0,
         courseCount: 0,
-        points: 0,
         balance: 0
       },
       recentOrders: [],
@@ -217,15 +212,9 @@ export default {
             this.stats.balance = res.data.data.balance || 0
           }
         })
-      this.$http.get('/user/account/points')
-        .then(res => {
-          if (res.data.success) {
-            this.stats.points = res.data.data.points || 0
-          }
-        })
     },
     loadRecentOrders() {
-      this.$http.post('/order/courseOrder/pagelist', { pageNum: 1, pageSize: 5 })
+      this.$http.post('/order/courseOrder/pagelist', { page: 1, rows: 5 })
         .then(res => {
           if (res.data.success) {
             this.recentOrders = res.data.data.rows || []

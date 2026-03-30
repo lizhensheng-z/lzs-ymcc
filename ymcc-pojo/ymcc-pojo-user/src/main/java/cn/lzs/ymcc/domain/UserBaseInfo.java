@@ -4,6 +4,9 @@ import java.util.Date;
 import com.baomidou.mybatisplus.annotations.TableField;
 import com.baomidou.mybatisplus.activerecord.Model;
 import com.baomidou.mybatisplus.annotations.TableName;
+import jdk.nashorn.internal.ir.annotations.Ignore;
+import lombok.Data;
+
 import java.io.Serializable;
 
 /**
@@ -14,6 +17,7 @@ import java.io.Serializable;
  * @author lzs
  * @since 2025-06-16
  */
+@Data
 @TableName("t_user_base_info")
 public class UserBaseInfo extends Model<UserBaseInfo> {
 
@@ -59,6 +63,8 @@ public class UserBaseInfo extends Model<UserBaseInfo> {
     private String areaCode;
     private String address;
 
+    @TableField(exist = false)
+    private String points;
 
     public Long getId() {
         return id;
