@@ -32,7 +32,7 @@
 
         <!-- 购物车列表 -->
         <div class="cart-list" v-if="cartItems.length > 0">
-          <el-table :data="cartItems" @selection-change="handleSelectionChange">
+          <el-table :data="cartItems" @selection-change="handleSelectionChange" row-key="id">
             <el-table-column type="selection" width="55"></el-table-column>
             <el-table-column label="课程信息" min-width="300">
               <template slot-scope="scope">

@@ -157,28 +157,22 @@ export default {
 
       this.submitting = true
 
-      // 创建订单
-      this.$http.post('/order/placeOrder', {
-        userId: this.userInfo.id,
-        courses: this.courses.map(c => ({
-          courseId: c.id,
-          courseName: c.name,
-          coursePrice: c.price,
-          coursePic: c.pic
-        })),
-        totalAmount: this.totalPrice,
-        paymentMethod: this.paymentMethod
+      // 创建订单 - 调用后端 placeOrder 接口
+      this.$http.post('/order/courseOrder/placeOrder', {
+        courseIds: this.courses.map(c => c.id),
+        payType: this.paymentMethod === 'alipay' ? 1 : (this.paymentMethod === 'wechat' ? 2 : 0),
+        type: 0 // 0 普通订单，1 秒杀订单
       }).then(res => {
         if (res.data.success) {
-          const orderId = res.data.data
-          // 模拟支付成功，跳转到成功页
-          this.$router.push(`/order/success?orderId=${orderId}`)
+          const orderNo = res.data.data
+          // 直接跳转到成功页（已支付状态）
+          this.$router.push(`/order/success?orderNo=${orderNo}`)
         } else {
           this.$message.error(res.data.message || '创建订单失败')
         }
-      }).catch(() => {
-        // 模拟创建订单成功
-        this.$router.push('/order/success?orderId=mock123')
+      }).catch((err) => {
+        console.error(err)
+        this.$message.error('创建订单失败，请稍后重试')
       }).finally(() => {
         this.submitting = false
       })

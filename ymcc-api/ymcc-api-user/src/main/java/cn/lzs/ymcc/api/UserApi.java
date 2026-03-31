@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 /**
  * @author 李振生
  */
-@FeignClient(name = "service-user")
+@FeignClient(name = "service-user", url = "http://localhost:10040")
 @RequestMapping("/user")
 public interface UserApi {
     /**

@@ -6,11 +6,7 @@ import cn.lzs.ymcc.api.CourseFeignApi;
 import cn.lzs.ymcc.api.UserApi;
 import cn.lzs.ymcc.constant.RedisConstants;
 import cn.lzs.ymcc.constant.RocketMQConstants;
-import cn.lzs.ymcc.domain.Course;
-import cn.lzs.ymcc.domain.CourseOrder;
-import cn.lzs.ymcc.domain.CourseOrderItem;
-import cn.lzs.ymcc.domain.PayOrder;
-import cn.lzs.ymcc.domain.User;
+import cn.lzs.ymcc.domain.*;
 import cn.lzs.ymcc.dto.*;
 import cn.lzs.ymcc.mapper.CourseOrderItemMapper;
 import cn.lzs.ymcc.mapper.CourseOrderMapper;
@@ -54,6 +50,8 @@ import java.util.*;
 public class CourseOrderServiceImpl extends ServiceImpl<CourseOrderMapper, CourseOrder> implements ICourseOrderService {
 
 
+
+
     private static final Logger log = LoggerFactory.getLogger(CourseOrderServiceImpl.class);
     @Autowired
     private RedisTemplate<Object,Object> redisTemplate;
@@ -69,14 +67,110 @@ public class CourseOrderServiceImpl extends ServiceImpl<CourseOrderMapper, Cours
     private RocketMQTemplate rocketMQTemplate;
     @Autowired
     private ICourseOrderItemService courseOrderItemService;
+
+    /**
+     * 简化版下单：直接生成订单并设为已支付状态
+     * @param placeOrderDTO
+     * @return 订单号
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public String placeOrder(PlaceOrderDTO placeOrderDTO) {
+        // 1. 参数校验
+        List<Long> courseIds = placeOrderDTO.getCourseIds();
+        if (courseIds == null || courseIds.size() == 0) {
+            throw new GlobalBusinessException("课程 id 不能为空");
+        }
+        Integer payType = placeOrderDTO.getPayType();
+        if (payType == null) {
+            throw new GlobalBusinessException("支付类型不能为空");
+        }
+
+        // 2. 获取登录用户信息
+        Long loginId = LoginContext.getLogin().getId();
+        JSONResult userResult = userApi.getUserByLoginId(loginId);
+        if (!userResult.isSuccess() || userResult.getData() == null) {
+            throw new GlobalBusinessException("用户信息不存在");
+        }
+        User user = JSONObject.parseObject(JSONObject.toJSONString(userResult.getData()), User.class);
+
+        // 3. 查询课程信息（调用课程服务）
+        JSONResult courseInfoResult = courseFeignApi.getCourseInfo(courseIds);
+        if (!courseInfoResult.isSuccess() || courseInfoResult.getData() == null) {
+            throw new GlobalBusinessException("课程信息不存在");
+        }
+        String courseJson = JSONObject.toJSONString(courseInfoResult.getData());
+        CourseInfoDTO courseInfoDTO = JSONObject.parseObject(courseJson, CourseInfoDTO.class);
+
+        // 4. 生成订单号
+        String orderNo = CodeGenerateUtils.generateOrderSn(user.getId());
+        Date now = new Date();
+
+        // 5. 创建主订单
+        CourseOrder courseOrder = new CourseOrder();
+        courseOrder.setUserId(user.getId());
+        courseOrder.setOrderNo(orderNo);
+        courseOrder.setCreateTime(now);
+        courseOrder.setUpdateTime(now);
+        courseOrder.setTotalAmount(courseInfoDTO.getTotalAmount());
+        courseOrder.setPayType(payType);
+        courseOrder.setTotalCount(courseInfoDTO.getCourses().size());
+        courseOrder.setStatusOrder(CourseOrder.OrderComplete); // 直接设为已支付/订单完成
+        courseOrder.setTitle(courseInfoDTO.getCourses().get(0).getCourse().getName());
+        courseOrder.setVersion(0);
+
+        // 6. 创建订单明细
+        List<CourseOrderItem> courseOrderItems = new ArrayList<>();
+        for (CourseDTO courseDTO : courseInfoDTO.getCourses()) {
+            Course course = courseDTO.getCourse();
+            CourseMarket market = courseDTO.getCourseMarket();
+
+            CourseOrderItem item = new CourseOrderItem();
+            item.setCourseId(course.getId());
+            item.setCourseName(course.getName());
+            item.setCoursePic(course.getPic());
+            item.setOrderNo(orderNo);
+            item.setAmount(market != null ? market.getPrice() : courseInfoDTO.getTotalAmount());
+            item.setCount(CourseOrderItem.OneCount);
+            item.setCreateTime(now);
+            item.setUpdateTime(now);
+            item.setVersion(0);
+            courseOrderItems.add(item);
+        }
+
+        // 7. 保存主订单
+        courseOrderMapper.insert(courseOrder);
+
+        // 8. 批量保存订单明细
+        courseOrderItemMapper.insertBatch(courseOrderItems);
+
+        // 9. 调用课程服务添加学习记录（用户购买课程关系）
+        CourseUserLearnDTO learnDTO = new CourseUserLearnDTO();
+        learnDTO.setCourseIds(courseIds);
+        learnDTO.setLoginId(user.getId());
+        learnDTO.setCourseOrderNo(orderNo);
+        learnDTO.setStatus(CourseUserLearnDTO.BUYED);
+        learnDTO.setStartTime(now);
+        learnDTO.setEndTime(null); // 永久有效
+        learnDTO.setCreateTime(now);
+        JSONResult learnResult = courseFeignApi.addCourseUserLearn(learnDTO);
+        if (!learnResult.isSuccess()) {
+            log.warn("添加学习记录失败，订单号：{}", orderNo);
+        }
+
+        log.info("订单生成成功，订单号：{}, 用户 ID: {}, 金额：{}", orderNo, user.getId(), courseInfoDTO.getTotalAmount());
+
+        return orderNo;
+    }
+
+
     /**
      * 生成订单相关信息
      * @param placeOrderDTO
      * @return
      */
     @Transactional(rollbackFor = Exception.class)
-    @Override
-    public String placeOrder(PlaceOrderDTO placeOrderDTO) {
+    public String placeOrder2(PlaceOrderDTO placeOrderDTO) {
         //1 参数校验
         List<Long> courseIds = placeOrderDTO.getCourseIds();
         if (courseIds == null || courseIds.size() == 0) {

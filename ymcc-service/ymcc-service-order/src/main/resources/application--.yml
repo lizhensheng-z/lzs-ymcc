@@ -51,3 +51,35 @@ rocketmq:
     # 发送消息失败重试次数，默认2
     retry-times-when-send-failed: 2
     retry-times-when-send-async-failed: 2
+
+# Feign 和 Ribbon 超时配置
+ribbon:
+  # 建立连接的超时时间（毫秒）
+  ConnectTimeout: 10000
+  # 读取资源的超时时间（毫秒）
+  ReadTimeout: 30000
+  # 请求处理的超时时间（毫秒）
+  OkToRetryOnAllOperations: false
+  # 重试次数
+  MaxAutoRetries: 1
+  # 切换实例的重试次数
+  MaxAutoRetriesNextServer: 1
+
+feign:
+  httpclient:
+    enabled: true
+  okhttp:
+    enabled: false
+  client:
+    config:
+      default:
+        connectTimeout: 10000
+        readTimeout: 30000
+
+
+# Feign 日志配置
+logging:
+  level:
+    cn.lzs.ymcc.api.UserApi: DEBUG
+    feign: DEBUG
+

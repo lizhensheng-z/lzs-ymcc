@@ -62,10 +62,13 @@
           <el-form-item label="头像">
             <el-upload
               class="avatar-uploader"
-              action="/ upload"
+              :action="uploadAction"
               :show-file-list="false"
               :on-success="handleAvatarSuccess"
-              :before-upload="beforeAvatarUpload">
+              :on-error="handleAvatarError"
+              :before-upload="beforeAvatarUpload"
+              :headers="uploadHeaders"
+              name="file">
               <img v-if="profileForm.headImg" :src="profileForm.headImg" class="avatar">
               <i v-else class="el-icon-plus avatar-uploader-icon"></i>
             </el-upload>
@@ -102,6 +105,8 @@ export default {
       isLoggedIn: false,
       userInfo: {},
       saving: false,
+      uploadAction: 'http://localhost:10010/ymcc/common/oss/uploadFile', // 后端上传接口地址（网关端口 10010）
+      uploadHeaders: {},
       profileForm: {
         username: '',
         nickName: '',
@@ -138,6 +143,11 @@ export default {
         const user = localStorage.getItem('user')
         if (user) {
           this.userInfo = JSON.parse(user)
+        }
+        // 设置上传请求的认证头
+        const token = localStorage.getItem('U-TOKEN')
+        this.uploadHeaders = {
+          'Authorization': 'Bearer ' + token
         }
       } else {
         this.$router.push('/login')
@@ -189,7 +199,16 @@ export default {
       this.loadUserInfo()
     },
     handleAvatarSuccess(res, file) {
-      this.profileForm.headImg = URL.createObjectURL(file.raw)
+      // 使用后端返回的真实图片 URL
+      if (res.success && res.data) {
+        this.profileForm.headImg = res.data
+        this.$message.success('头像上传成功')
+      } else {
+        this.$message.error(res.message || '上传失败')
+      }
+    },
+    handleAvatarError() {
+      this.$message.error('头像上传失败，请重试')
     },
     beforeAvatarUpload(file) {
       const isJPG = file.type === 'image/jpeg' || file.type === 'image/png'

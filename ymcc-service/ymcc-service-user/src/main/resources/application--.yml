@@ -34,4 +34,28 @@ seata:
       default: 101.43.63.144:8091
 #mybatis-plus
 mybatis-plus:
-  mapper-locations: classpath:/cn/lzs/ymcc/mapper/*.xml #加载读取mapper.xml文件的位置
+  mapper-locations: classpath:/cn/lzs/ymcc/mapper/*.xml #加载读取 mapper.xml 文件的位置
+
+# Feign 和 Ribbon 超时配置
+ribbon:
+  # 建立连接的超时时间（毫秒）
+  ConnectTimeout: 10000
+  # 读取资源的超时时间（毫秒）
+  ReadTimeout: 30000
+  # 请求处理的超时时间（毫秒）
+  OkToRetryOnAllOperations: false
+  # 重试次数
+  MaxAutoRetries: 1
+  # 切换实例的重试次数
+  MaxAutoRetriesNextServer: 1
+
+feign:
+  httpclient:
+    enabled: true
+  okhttp:
+    enabled: false
+  client:
+    config:
+      default:
+        connectTimeout: 10000
+        readTimeout: 30000

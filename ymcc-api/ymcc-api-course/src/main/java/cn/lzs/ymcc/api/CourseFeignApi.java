@@ -1,8 +1,9 @@
 package cn.lzs.ymcc.api;
 
-import cn.lzs.ymcc.domain.Course;
+
 import cn.lzs.ymcc.dto.CourseUserLearnDTO;
 import cn.lzs.ymcc.result.JSONResult;
+
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 

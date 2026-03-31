@@ -14,4 +14,4 @@ spring:
         file-extension: yaml #配置文件格式 配置后缀
         prefix: application-user #配置前缀 ，默认使用sring.application.name
         group: DEFAULT_GROUP
-        namespace: 7c652650-8ff9-4254-9c9d-375882839462 #命名空间 自定义-user
+        namespace: a69701ff-0f56-49ef-b740-e34fb9fe583b #命名空间 自定义-user

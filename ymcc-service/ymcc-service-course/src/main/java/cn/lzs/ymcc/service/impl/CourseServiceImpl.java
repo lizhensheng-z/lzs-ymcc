@@ -18,7 +18,7 @@ import cn.lzs.ymcc.util.LoginContext;
 
 import cn.lzs.ymcc.vo.CourseDetailDataVO;
 import com.baomidou.mybatisplus.service.impl.ServiceImpl;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -38,6 +38,7 @@ import java.util.stream.Stream;
  * @author lzs
  * @since 2025-06-23
  */
+@Slf4j
 @Service
 public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> implements ICourseService {
 
@@ -156,7 +157,6 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public void onLineCourse(Long id) {
         if(id == null){
             throw new GlobalBusinessException("课程id不能为空");
@@ -175,92 +175,133 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         CourseDoc courseDoc = new CourseDoc();
         BeanUtils.copyProperties(course,courseDoc);
         CourseType courseType = courseTypeMapper.selectById(course.getCourseTypeId());
+        if (courseType == null) {
+            throw new GlobalBusinessException("课程类型不存在，课程类型ID: " + course.getCourseTypeId());
+        }
         courseDoc.setCourseTypeName(courseType.getName());
         CourseMarket courseMarket = courseMarketMapper.selectById(course.getId());
-        BeanUtils.copyProperties(courseMarket,courseDoc);
-        courseDoc.setCharge(courseMarket.getCharge() == 1 ? "免费" :"收费");
+        if (courseMarket != null) {
+            BeanUtils.copyProperties(courseMarket,courseDoc);
+            courseDoc.setCharge(courseMarket.getCharge() == 1 ? "免费" :"收费");
+        }
+
         CourseSummary courseSummary = courseSummaryMapper.selectById(course.getId());
-        BeanUtils.copyProperties(courseSummary,courseDoc);
+        if (courseSummary != null) {
+            BeanUtils.copyProperties(courseSummary,courseDoc);
+        }
+
         //4 调用Es进行保存
-        JSONResult jsonResult = esCourseApi.saveCourseDoc(courseDoc);
-        if (!jsonResult.isSuccess()){
-            throw new GlobalBusinessException("调用ESCourse保存失败");
+        JSONResult jsonResult = null;
+        try {
+            jsonResult = esCourseApi.saveCourseDoc(courseDoc);
+//            if (!jsonResult.isSuccess()){
+//                throw new GlobalBusinessException("调用ESCourse保存失败:" + jsonResult.getMessage());
+//            }
+        } catch (feign.RetryableException e) {
+            // 捕获超时异常,但不阻塞主流程
+            log.error("ES课程文档保存超时,课程ID:{},错误信息:{}", id, e.getMessage());
+            // 可以选择发送到MQ进行异步重试,或者记录日志人工处理
+            // 注意:这里不抛出异常,确保课程上线主流程成功
+        } catch (Exception e) {
+            log.error("ES课程文档保存失败,课程ID:{},错误信息:{}", id, e.getMessage());
+            throw new GlobalBusinessException("ES课程文档保存失败:" + e.getMessage());
         }
 
-        publish(course);
+        try{
+            publish(course);
+        }catch (Exception e){
+            log.error("课程发布失败,课程ID:{},错误信息:{}", id, e.getMessage());
+
+        }
     }
-    //TODO 需要优化代码
+    //课程上线后发布通知
     public void publish(Course course){
-        //课程成功上线，调用MQ通知用户 先引入mq然后调用mq推送
-        //准备消息体
-        //先准备站内消息进行发送
-        StationMessageDTO stationMessageDTO = new StationMessageDTO();
-        stationMessageDTO.setTitle(course.getName());
-        stationMessageDTO.setType(SystemConstants.SYSTEM_MESSAGE);
-        CourseDetail courseDetail = courseDetailMapper.selectById(course.getId());
-        stationMessageDTO.setContent(courseDetail.getDescription());
-        ArrayList<Long> userIds = new ArrayList<>();
-        JSONResult list = userApi.list();
-        Object data = list.getData();
-        List<User> users = (List<User>) data;
-        // 检查数据类型是否是 List
-        for (Object obj : users) {
-            if (obj instanceof LinkedHashMap) {
-                LinkedHashMap map = (LinkedHashMap) obj;
-                User user = new User();
-                //Integer转Long
-                Integer idInt = (Integer) map.get("id");
-                Long idLong = idInt.longValue(); // 或 Long.valueOf(idInt)
-                user.setId(idLong);
+        try {
+            //课程成功上线，调用MQ通知用户 先引入mq然后调用mq推送
+            //准备消息体
+            //先准备站内消息进行发送
+            StationMessageDTO stationMessageDTO = new StationMessageDTO();
+            stationMessageDTO.setTitle(course.getName());
+            stationMessageDTO.setType(SystemConstants.SYSTEM_MESSAGE);
+            CourseDetail courseDetail = courseDetailMapper.selectById(course.getId());
+            stationMessageDTO.setContent(courseDetail.getDescription());
+            ArrayList<Long> userIds = new ArrayList<>();
+            
+            // 调用用户服务获取用户列表
+            JSONResult list = userApi.list();
+            Object data = list.getData();
+            List<User> users = (List<User>) data;
+            
+            // 检查数据类型是否是 List
+            for (Object obj : users) {
+                if (obj instanceof LinkedHashMap) {
+                    LinkedHashMap map = (LinkedHashMap) obj;
+                    User user = new User();
+                    //Integer转Long
+                    Integer idInt = (Integer) map.get("id");
+                    Long idLong = idInt.longValue(); // 或 Long.valueOf(idInt)
+                    user.setId(idLong);
+                    userIds.add(idLong);  //将用户ID添加到列表中
+                }
             }
-        }
 
-        stationMessageDTO.setUserIds(userIds);
-        //调用生产者发送站内消息
-        courseProducer.synSendStationMessage(stationMessageDTO);
-        //准备短信通知消息
-        SmsMessageDTO smsMessageDTO = new SmsMessageDTO();
-        smsMessageDTO.setTitle(course.getName());
-        smsMessageDTO.setContent(courseDetail.getDescription());
-        ArrayList<User2Phone> user2PhoneArrayList = new ArrayList<>();
-        for (Object obj : users) {
-            if(obj instanceof LinkedHashMap){
-                LinkedHashMap map = (LinkedHashMap) obj;
-                User2Phone user2Phone = new User2Phone();
-                String phone = (String) map.get("phone");
-                user2Phone.setPhone(phone);
-                Integer idInt = (Integer) map.get("id");
-                Long idLong = idInt.longValue(); // 或 Long.valueOf(idInt)
-                user2Phone.setUserId(idLong);
-                user2PhoneArrayList.add(user2Phone);
+            stationMessageDTO.setUserIds(userIds);
+            //调用生产者发送站内消息
+            courseProducer.synSendStationMessage(stationMessageDTO);
+            
+            //准备短信通知消息
+            SmsMessageDTO smsMessageDTO = new SmsMessageDTO();
+            smsMessageDTO.setTitle(course.getName());
+            smsMessageDTO.setContent(courseDetail.getDescription());
+            ArrayList<User2Phone> user2PhoneArrayList = new ArrayList<>();
+            for (Object obj : users) {
+                if(obj instanceof LinkedHashMap){
+                    LinkedHashMap map = (LinkedHashMap) obj;
+                    User2Phone user2Phone = new User2Phone();
+                    String phone = (String) map.get("phone");
+                    user2Phone.setPhone(phone);
+                    Integer idInt = (Integer) map.get("id");
+                    Long idLong = idInt.longValue(); // 或 Long.valueOf(idInt)
+                    user2Phone.setUserId(idLong);
+                    user2PhoneArrayList.add(user2Phone);
+                }
             }
-        }
 
-        smsMessageDTO.setUser2PhoneList(user2PhoneArrayList);
-        //调用生产者异步发送短信
-        courseProducer.asynSendSmsMessage(smsMessageDTO);
-        //准备邮箱通知消息
-        EmailMessageDTO emailMessageDTO = new EmailMessageDTO();
-        emailMessageDTO.setTitle(course.getName());
-        emailMessageDTO.setContent(courseDetail.getDescription());
-        ArrayList<User2Email> user2EmailArrayList = new ArrayList<>();
+            smsMessageDTO.setUser2PhoneList(user2PhoneArrayList);
+            //调用生产者异步发送短信
+            courseProducer.asynSendSmsMessage(smsMessageDTO);
+            
+            //准备邮箱通知消息
+            EmailMessageDTO emailMessageDTO = new EmailMessageDTO();
+            emailMessageDTO.setTitle(course.getName());
+            emailMessageDTO.setContent(courseDetail.getDescription());
+            ArrayList<User2Email> user2EmailArrayList = new ArrayList<>();
 
-        for (Object obj : users) {
-            if(obj instanceof LinkedHashMap){
-                LinkedHashMap map = (LinkedHashMap) obj;
-                User2Email user2Email = new User2Email();
-                String email = (String) map.get("email");
-                user2Email.setEmail(email);
-                Integer idInt = (Integer) map.get("id");
-                Long idLong = idInt.longValue(); // 或 Long.valueOf(idInt)
-                user2Email.setUserId(idLong);
-                user2EmailArrayList.add(user2Email);
+            for (Object obj : users) {
+                if(obj instanceof LinkedHashMap){
+                    LinkedHashMap map = (LinkedHashMap) obj;
+                    User2Email user2Email = new User2Email();
+                    String email = (String) map.get("email");
+                    user2Email.setEmail(email);
+                    Integer idInt = (Integer) map.get("id");
+                    Long idLong = idInt.longValue(); // 或 Long.valueOf(idInt)
+                    user2Email.setUserId(idLong);
+                    user2EmailArrayList.add(user2Email);
+                }
             }
+            emailMessageDTO.setUser2Emails(user2EmailArrayList);
+            //调用生产者异步发送邮件
+            courseProducer.asynSendEmailMessage(emailMessageDTO);
+            
+            log.info("课程上线通知发送成功,课程ID:{},课程名称:{}", course.getId(), course.getName());
+        } catch (feign.RetryableException e) {
+            // 捕获Feign超时异常,记录日志但不阻塞主流程
+            log.error("调用用户服务超时,课程ID:{},错误信息:{}", course.getId(), e.getMessage());
+            // 超时可能是用户数据量过大导致,建议后续优化为异步批量处理
+        } catch (Exception e) {
+            // 捕获其他异常,记录日志但不阻塞主流程
+            log.error("课程上线通知发送失败,课程ID:{},错误信息:{}", course.getId(), e.getMessage(), e);
         }
-        emailMessageDTO.setUser2Emails(user2EmailArrayList);
-        //调用生产者异步发送邮件
-        courseProducer.asynSendEmailMessage(emailMessageDTO);
-
     }
 
     /**

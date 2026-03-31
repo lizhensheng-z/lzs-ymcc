@@ -2,7 +2,6 @@ package cn.lzs.ymcc.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.ResourceServerConfigurer;
@@ -15,7 +14,6 @@ import org.springframework.security.oauth2.provider.token.store.JwtTokenStore;
 //@EnableResourceServer:开启资源服务配置
 @Configuration
 @EnableResourceServer
-@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class ResourceServerConfig implements ResourceServerConfigurer {
 
     //2.3.配置Token的存储方案

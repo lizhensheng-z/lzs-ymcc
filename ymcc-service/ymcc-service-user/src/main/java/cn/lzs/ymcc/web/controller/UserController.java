@@ -87,13 +87,14 @@ public class UserController {
         userService.deleteById(id);
         return JSONResult.success();
     }
-
     /**
      * 根据loginId获取userId
      */
     @RequestMapping(value = "/loginId/{loginId}",method = RequestMethod.GET)
     public JSONResult getUserByLoginId(@PathVariable("loginId")Long loginId){
+        System.out.println("进入了loginId:" + loginId);
       User user =   userService.getUserByLoginId(loginId);
+        System.out.println("user:" + user);
         return JSONResult.success(user);
     }
     /**

@@ -63,9 +63,19 @@ public class LoginServiceImpl extends ServiceImpl<LoginMapper, Login> implements
         String tokenJSON = HttpUtil.sendPost(url, null);
         //jsonString转为accessToken
         log.info("获取到Token:{}", tokenJSON);
+
+        // 检查OAuth2是否返回错误
+        if (tokenJSON.contains("\"error\"")) {
+            com.alibaba.fastjson.JSONObject errorObj = JSON.parseObject(tokenJSON);
+            String error = errorObj.getString("error");
+            String errorDescription = errorObj.getString("error_description");
+            log.error("OAuth2认证失败: error={}, description={}", error, errorDescription);
+            throw new GlobalBusinessException("登录失败：" + (errorDescription != null ? errorDescription : error));
+        }
+
         AccessTokenVo accessTokenVo = JSON.parseObject(tokenJSON, AccessTokenVo.class);
         //TODO 封装token过期时间，为当前时间+expiresTime
-//        accessTokenVo.setExpiresTime(System.currentTimeMillis()+accessTokenVo.getExpiresTime()*1000);
+       accessTokenVo.setExpiresTime(System.currentTimeMillis()+accessTokenVo.getExpiresTime()*1000);
         return accessTokenVo;
     }
     @Override

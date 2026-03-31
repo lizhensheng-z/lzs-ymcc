@@ -44,6 +44,10 @@ public interface SystemConstants {
    String USER_IS_NOT_EXIST = "用户不存在";
    String USER_TYPE_IS_NOT_MATCH = "用户类型不匹配";
 
+   // 默认OAuth2客户端配置（前台用户）
+   String DEFAULT_CLIENT_ID = "admin";
+   String DEFAULT_CLIENT_SECRET = "123";
+
 
    /**
     * 课程状态：0 下线 1 上线

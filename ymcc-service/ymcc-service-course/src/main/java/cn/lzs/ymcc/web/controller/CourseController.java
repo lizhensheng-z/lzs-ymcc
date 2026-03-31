@@ -89,6 +89,20 @@ public class CourseController {
         return JSONResult.success();
     }
 
+    /**
+     * 课程下架
+     */
+    @PostMapping("/offLineCourse/{id}")
+    public JSONResult offLineCourse(@PathVariable("id") Long id){
+        Course course = courseService.selectById(id);
+        if (course != null) {
+            course.setStatus(2); // 2表示下架
+            courseService.updateById(course);
+            return JSONResult.success();
+        }
+        return JSONResult.error("课程不存在");
+    }
+
 
 
     /**

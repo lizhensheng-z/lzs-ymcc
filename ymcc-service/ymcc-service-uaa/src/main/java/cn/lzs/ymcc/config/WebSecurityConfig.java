@@ -51,7 +51,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 //            http.authorizeRequests().antMatchers(permission.getResource()).hasAuthority(permission.getSn());
 //        }
         http.authorizeRequests()                                //授权配置
-                .antMatchers("/**","/login","/login/common","/v2/api-docs","/login/refresh").permitAll()  //登录路径放行
+                .antMatchers("/**","/login","/login/common","/v2/api-docs","/login/refresh","/login/registerByPhone").permitAll()  //登录路径放行
 //                .anyRequest().authenticated()                   //其他路径都要认证之后才能访问
                 .and().formLogin()                              //允许表单登录
                 .successForwardUrl("/login/success")             // 设置登陆成功页 修改为自己的

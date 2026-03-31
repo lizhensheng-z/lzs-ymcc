@@ -25,7 +25,7 @@
 		</el-col>
 
 		<!--列表v-loading="listLoading"-->
-		<el-table @row-click="rowClick" :data="courses" v-loading="listLoading"  @selection-change="selsChange"
+		<el-table ref="courseTable" @row-click="rowClick" :data="courses" v-loading="listLoading"  @selection-change="selsChange"
 				  highlight-current-row  style="width: 100%;">
 			<!--多选框-->
 			<el-table-column type="selection" width="55e">
@@ -275,7 +275,7 @@
 			      	courseId:1,
 					paths:[]
 				},
-                row:"",
+                row:null,
                 courseTypeProps:{
                     value:"id",
                     label:"name"
@@ -351,8 +351,9 @@
 				});
 			},
 			killCourseModelView(){
-				//获取选中的行
-				if(!this.row || this.row  === ""){
+				//获取选中的行（支持行点击和多选框选中）
+				const currentRow = this.row || (this.sels && this.sels.length > 0 ? this.sels[0] : null);
+				if(!currentRow){
 					this.$message({ message: '老铁，请选择数据',type: 'error'});
 					return;
 				}
@@ -361,10 +362,10 @@
 				this.killCourseForm.startTime = "";
 				this.killCourseForm.endTime = "";
 
-				this.killCourseForm.courseId = this.row.id;
-				this.killCourseForm.courseName = this.row.name;
-				this.killCourseForm.coursePic = this.row.pic;
-				this.killCourseForm.teacherNames = this.row.teacherNames;
+				this.killCourseForm.courseId = currentRow.id;
+				this.killCourseForm.courseName = currentRow.name;
+				this.killCourseForm.coursePic = currentRow.pic;
+				this.killCourseForm.teacherNames = currentRow.teacherNames;
 				this.killCourseFormVisible = true;
 			},
 			addKillCourseSubmit(){
@@ -513,6 +514,7 @@
 			},
             handleCurrentChange(curentPage){
                 this.page = curentPage;
+                this.row = null; // 切换页码时清空选中行
                 this.getCourses();
 			},
             getCourses(){
@@ -534,13 +536,14 @@
 				});
 			},
             onLineCourse(){
-                //获取选中的行
-				if(!this.row || this.row  === ""){
+                //获取选中的行（支持行点击和多选框选中）
+                const currentRow = this.row || (this.sels && this.sels.length > 0 ? this.sels[0] : null);
+				if(!currentRow){
                     this.$message({ message: '老铁，你不选中数据，臣妾上不了啊....',type: 'error'});
 				    return;
 				}
 
-				this.$http.post("/course/course/onLineCourse/"+this.row.id).then(res=>{
+				this.$http.post("/course/course/onLineCourse/"+currentRow.id).then(res=>{
 				    var ajaxResult = res.data;
 				    if(ajaxResult.success){
                         this.$message({ message: '老铁，上线成功.',type: 'success'});
@@ -551,6 +554,8 @@
 				}).catch(error => {
 					this.$message({ message: error.message,type: 'error'});
 				});
+			},
+              // 旧代码备份
               // this.$http.post("/course/course/onLineCourse/" + this.row.id, {}, {
               //   headers: {
               //     "Content-Type": "application/json;charset=UTF-8"
@@ -566,15 +571,15 @@
               // }).catch(error => {
               //   this.$message({ message: error.message, type: 'error' });
               // });
-			},
             offLineCourse(){
-                //获取选中的行
-                if(!this.row || this.row  === ""){
+                //获取选中的行（支持行点击和多选框选中）
+                const currentRow = this.row || (this.sels && this.sels.length > 0 ? this.sels[0] : null);
+                if(!currentRow){
                     this.$message({ message: '老铁，你不选中数据，臣妾下不了啊....',type: 'error'});
                     return;
                 }
 
-                this.$http.post("/course/course/offLineCourse/"+this.row.id).then(res=>{
+                this.$http.post("/course/course/offLineCourse/"+currentRow.id).then(res=>{
                     var ajaxResult = res.data;
                     if(ajaxResult.success){
                         this.$message({ message: '老铁，下线成功.',type: 'success'});
@@ -609,8 +614,8 @@
 					forUser: row.forUser,
 					courseTypeId: row.courseTypeId,
 					gradeId: row.gradeId,
-					startTime: row.startTime,
-					endTime: row.endTime,
+					startTime: row.startTime ? this.formatDate(row.startTime) : '',
+					endTime: row.endTime ? this.formatDate(row.endTime) : '',
 					validDays: row.validDays,
 					description: row.description,
 					intro: row.intro,
@@ -622,6 +627,15 @@
 					teacherIds: row.teacherIds
 				};
 				this.addFormVisible = true;
+			},
+			// 日期格式化方法 - 将日期转换为 yyyy-MM-dd 格式字符串
+			formatDate(date) {
+				if (!date) return '';
+				const d = new Date(date);
+				const year = d.getFullYear();
+				const month = String(d.getMonth() + 1).padStart(2, '0');
+				const day = String(d.getDate()).padStart(2, '0');
+				return `${year}-${month}-${day}`;
 			},
 			del(row){
 				this.$confirm('确认删除该课程吗?', '提示', { type: 'warning' }).then(() => {

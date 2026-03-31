@@ -83,9 +83,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         //2.1首先调用Uaa服务完成t_login表的注册返回Login表的id
         Login login = new Login();
         login.setUsername(phone);//手机号充当默认用户名
-        //TODO 密码已加密待测试
         login.setPassword(passwordEncoder.encode(phoneRegisterDTO.getPassword()));
         login.setType(SystemConstants.REGISTER_TYPE_USER);
+        // 设置OAuth2客户端信息
+        login.setClientId(SystemConstants.DEFAULT_CLIENT_ID);
+        login.setClientSecret(SystemConstants.DEFAULT_CLIENT_SECRET);
+        // 设置账户状态
+        login.setEnabled(true);
+        login.setAccountNonExpired(true);
+        login.setCredentialsNonExpired(true);
+        login.setAccountNonLocked(true);
         JSONResult jsonResult = loginApi.registerByPhone(login);
         // 检查返回结果
         if (jsonResult == null || !jsonResult.isSuccess() || jsonResult.getData() == null) {

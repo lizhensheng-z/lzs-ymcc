@@ -110,11 +110,16 @@ public class KillCourse extends Model<KillCourse> {
      */
     public Long getTimeDiffMill() {
         Date now = new Date();
-        if (isKilling()) { // 如果在秒杀中
-            return getEndTime().getTime() - now.getTime();  // 如果在秒杀中,秒杀结束时间减去当前时间,获取到秒杀结束倒计时
+        Date startTime = getStartTime();
+        Date endTime = getEndTime();
+        if (startTime == null || endTime == null) {
+            return null;
         }
-        if (now.before(getStartTime())){  // 如果是在秒杀之前,
-            return getStartTime().getTime() - now.getTime();  // 如果是在秒杀开始之前, 秒杀开始时间减去现在时间,获取到秒杀开始倒计时
+        if (isKilling()) { // 如果在秒杀中
+            return endTime.getTime() - now.getTime();  // 如果在秒杀中,秒杀结束时间减去当前时间,获取到秒杀结束倒计时
+        }
+        if (now.before(startTime)){  // 如果是在秒杀之前,
+            return startTime.getTime() - now.getTime();  // 如果是在秒杀开始之前, 秒杀开始时间减去现在时间,获取到秒杀开始倒计时
 
         }
         return null;
@@ -127,7 +132,11 @@ public class KillCourse extends Model<KillCourse> {
      */
     public Boolean isUnbegin() {
         Date now = new Date();
-        if (now.after(getStartTime())) { // 当时时间如果在秒杀开始之前
+        Date startTime = getStartTime();
+        if (startTime == null) {
+            return false;
+        }
+        if (now.after(startTime)) { // 当时时间如果在秒杀开始之前
             return true;
         }
         return false;
@@ -140,7 +149,12 @@ public class KillCourse extends Model<KillCourse> {
      */
     public Boolean isKilling(){
         Date now = new Date();
-        if (now.after(getStartTime()) && now.before(getEndTime())){ // 如果当前时间在秒杀开始之后,且在秒杀结束之前,说明正在秒杀中
+        Date startTime = getStartTime();
+        Date endTime = getEndTime();
+        if (startTime == null || endTime == null) {
+            return false;
+        }
+        if (now.after(startTime) && now.before(endTime)){ // 如果当前时间在秒杀开始之后,且在秒杀结束之前,说明正在秒杀中
             return true;
         }
         return false;
@@ -151,9 +165,14 @@ public class KillCourse extends Model<KillCourse> {
      */
     public String getKillStatusName() {
         Date now = new Date();
-        if (now.before(getStartTime())){ // 当前时间在秒杀开始之前
+        Date startTime = getStartTime();
+        Date endTime = getEndTime();
+        if (startTime == null || endTime == null) {
             return "未开始";
-        } else if (now.after(getEndTime())){ // 当前时间在秒杀结束之后
+        }
+        if (now.before(startTime)){ // 当前时间在秒杀开始之前
+            return "未开始";
+        } else if (now.after(endTime)){ // 当前时间在秒杀结束之后
             return "秒杀已结束";
         }else { // 不在秒杀开始之前,也不在秒杀结束后
             return "秒杀中";
