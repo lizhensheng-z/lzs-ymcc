@@ -3,6 +3,9 @@ server:
 spring:
   application:
     name: service-gateway #服务名
+  redis:
+    host: 101.43.63.144
+    port: 6379
   cloud: #注册到Nacos
     nacos:
       discovery:

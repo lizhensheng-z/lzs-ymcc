@@ -53,6 +53,17 @@ public class KillActivityController {
     }
 
     /**
+     * 批量删除对象
+     */
+    @RequestMapping(value = "/batch",method = RequestMethod.DELETE)
+    public JSONResult batchDelete(@RequestBody Long[] ids){
+        for(Long id:ids){
+            killActivityService.deleteById(id);
+        }
+        return JSONResult.success();
+    }
+
+    /**
      * 删除对象
      */
     @RequestMapping(value = "/{id}",method = RequestMethod.DELETE)

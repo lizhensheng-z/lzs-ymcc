@@ -8,95 +8,110 @@ import cn.lzs.ymcc.constant.SystemConstants;
 import cn.lzs.ymcc.domain.Login;
 import cn.lzs.ymcc.mapper.LoginMapper;
 import cn.lzs.ymcc.service.ILoginService;
-import cn.lzs.ymcc.util.HttpUtil;
-import com.alibaba.fastjson.JSON;
+import cn.lzs.ymcc.util.JwtUtil;
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
-import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.baomidou.mybatisplus.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import javax.validation.Valid;
+import javax.annotation.Resource;
+import java.util.concurrent.TimeUnit;
 
 /**
- * <p>
  * 登录表 服务实现类
- * </p>
- *
- * @author lzs
- * @since 2025-06-16
+ * 使用 JWT 生成 Token，不再依赖 OAuth2
  */
 @Service
 @Slf4j
 public class LoginServiceImpl extends ServiceImpl<LoginMapper, Login> implements ILoginService {
 
+    @Resource
+    private LoginMapper loginMapper;
 
-    private final LoginMapper loginMapper;
-    @Value("${ymcc.authUrl}")
-    private String authUrl;
-    @Value("${ymcc.refreshUrl}")
-    private String refreshUrl;
+    @Resource
+    private PasswordEncoder passwordEncoder;
 
-    public LoginServiceImpl(LoginMapper loginMapper) {
-        this.loginMapper = loginMapper;
-    }
+    @Resource
+    private RedisTemplate<Object, Object> redisTemplate;
+
+    private static final String REDIS_TOKEN_PREFIX = "TOKEN:";
+    private static final long ACCESS_TOKEN_EXPIRE_SECONDS = 7200; // 2小时
+    private static final long REFRESH_TOKEN_EXPIRE_SECONDS = 2592000; // 30天
 
     @Override
     public AccessTokenVo loginCommon(LoginDTO loginDTO) {
-        //参数校验
-
-        //查询用户信息
+        // 1. 查询用户
         Login login = selectOne(new EntityWrapper<Login>().eq("username", loginDTO.getUsername()));
-        if(login == null){
+        if (login == null) {
             throw new GlobalBusinessException(SystemConstants.USER_IS_NOT_EXIST);
         }
-        if(loginDTO.getType()!=login.getType()){
+
+        // 2. 验证用户类型
+        if (!loginDTO.getType().equals(login.getType())) {
             throw new GlobalBusinessException(SystemConstants.USER_TYPE_IS_NOT_MATCH);
         }
-        //拼接URL发起登录请求
-        String url = String.format(authUrl,login.getClientId(),
-                login.getClientSecret(),
-                loginDTO.getUsername(),
-                loginDTO.getPassword());
-        //获取token
-        String tokenJSON = HttpUtil.sendPost(url, null);
-        //jsonString转为accessToken
-        log.info("获取到Token:{}", tokenJSON);
 
-        // 检查OAuth2是否返回错误
-        if (tokenJSON.contains("\"error\"")) {
-            com.alibaba.fastjson.JSONObject errorObj = JSON.parseObject(tokenJSON);
-            String error = errorObj.getString("error");
-            String errorDescription = errorObj.getString("error_description");
-            log.error("OAuth2认证失败: error={}, description={}", error, errorDescription);
-            throw new GlobalBusinessException("登录失败：" + (errorDescription != null ? errorDescription : error));
+        // 3. 验证密码
+        if (!passwordEncoder.matches(loginDTO.getPassword(), login.getPassword())) {
+            throw new GlobalBusinessException("密码错误");
         }
 
-        AccessTokenVo accessTokenVo = JSON.parseObject(tokenJSON, AccessTokenVo.class);
-        //TODO 封装token过期时间，为当前时间+expiresTime
-       accessTokenVo.setExpiresTime(System.currentTimeMillis()+accessTokenVo.getExpiresTime()*1000);
-        return accessTokenVo;
+        // 4. 检查账户状态
+        if (!Boolean.TRUE.equals(login.getEnabled())) {
+            throw new GlobalBusinessException("账户已被禁用");
+        }
+
+        // 5. 生成 JWT Token
+        String accessToken = JwtUtil.generateAccessToken(login);
+        String refreshToken = JwtUtil.generateRefreshToken(login);
+
+        // 6. 存储到 Redis（用于主动踢人下线等场景）
+        String tokenKey = REDIS_TOKEN_PREFIX + login.getId();
+        redisTemplate.opsForValue().set(tokenKey, accessToken, ACCESS_TOKEN_EXPIRE_SECONDS, TimeUnit.SECONDS);
+
+        // 7. 构建返回对象
+        AccessTokenVo tokenVo = new AccessTokenVo();
+        tokenVo.setAccessToken(accessToken);
+        tokenVo.setRefreshToken(refreshToken);
+        tokenVo.setTokenType("Bearer");
+        tokenVo.setExpiresTime(ACCESS_TOKEN_EXPIRE_SECONDS);
+
+        log.info("用户登录成功: username={}", login.getUsername());
+        return tokenVo;
     }
+
     @Override
     public AccessTokenVo refresh(RefreshTokenDTO refreshTokenDTO) {
-        //参数校验,判断该用户名是否存在
-        Login login = selectOne(new EntityWrapper<Login>().eq("username", refreshTokenDTO.getUsername()));
-        if(login == null){
+        // 1. 验证 refresh token
+        Login login = JwtUtil.parseToken(refreshTokenDTO.getRefreshToken());
+        if (login == null) {
+            throw new GlobalBusinessException("Refresh Token 无效或已过期");
+        }
+
+        // 2. 验证用户是否存在
+        Login dbLogin = selectById(login.getId());
+        if (dbLogin == null) {
             throw new GlobalBusinessException(SystemConstants.USER_IS_NOT_EXIST);
         }
-        //拼接URL发起刷新token请求
 
-        String url = String.format(refreshUrl,refreshTokenDTO.getRefreshToken(),
-                login.getClientId(),
-                login.getClientSecret());
-        String refreshTokenJSON = HttpUtil.sendPost(url, null);
-        //jsonString转为accessToken
-        log.info("获取到Token:{}", refreshTokenJSON);
-        AccessTokenVo accessTokenVo = JSON.parseObject(refreshTokenJSON, AccessTokenVo.class);
-        //封装token过期时间，为当前时间+expiresTime然后返回
-        accessTokenVo.setExpiresTime(System.currentTimeMillis()+accessTokenVo.getExpiresTime()*1000);
+        // 3. 生成新的 Token
+        String accessToken = JwtUtil.generateAccessToken(dbLogin);
+        String refreshToken = JwtUtil.generateRefreshToken(dbLogin);
 
-        return accessTokenVo;
+        // 4. 更新 Redis
+        String tokenKey = REDIS_TOKEN_PREFIX + dbLogin.getId();
+        redisTemplate.opsForValue().set(tokenKey, accessToken, ACCESS_TOKEN_EXPIRE_SECONDS, TimeUnit.SECONDS);
+
+        // 5. 返回
+        AccessTokenVo tokenVo = new AccessTokenVo();
+        tokenVo.setAccessToken(accessToken);
+        tokenVo.setRefreshToken(refreshToken);
+        tokenVo.setTokenType("Bearer");
+        tokenVo.setExpiresTime(ACCESS_TOKEN_EXPIRE_SECONDS);
+
+        log.info("Token刷新成功: username={}", dbLogin.getUsername());
+        return tokenVo;
     }
 }

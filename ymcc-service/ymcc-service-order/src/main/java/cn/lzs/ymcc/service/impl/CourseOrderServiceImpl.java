@@ -140,7 +140,10 @@ public class CourseOrderServiceImpl extends ServiceImpl<CourseOrderMapper, Cours
 
         // 7. 保存主订单
         courseOrderMapper.insert(courseOrder);
-
+// 7.1. 为所有订单明细设置 orderId（MyBatis-Plus 会自动回填主键 ID）
+        for (CourseOrderItem item : courseOrderItems) {
+            item.setOrderId(courseOrder.getId());
+        }
         // 8. 批量保存订单明细
         courseOrderItemMapper.insertBatch(courseOrderItems);
 
@@ -559,6 +562,83 @@ public class CourseOrderServiceImpl extends ServiceImpl<CourseOrderMapper, Cours
 
         return GlobalExceptionCode.ORDER_FAILED_ERROR.getMessage();
 
+    }
+
+    /**
+     * 保存秒杀订单（简化版，直接标记为已支付）
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public String saveKillOrder(String orderNo, Long courseId, java.math.BigDecimal amount, Long userId, Integer payType) {
+        // 1. 检查订单是否已存在
+        CourseOrder existOrder = selectByOrderNo(orderNo);
+        if (existOrder != null) {
+            // 订单已存在，直接返回（幂等性处理）
+            return orderNo;
+        }
+
+        // 2. 查询课程信息
+        JSONResult courseInfoResult = courseFeignApi.info(courseId.toString());
+        if (!courseInfoResult.isSuccess() || courseInfoResult.getData() == null) {
+            throw new GlobalBusinessException("课程信息不存在");
+        }
+        String courseJson = JSONObject.toJSONString(courseInfoResult.getData());
+        List<CourseDTO> courseDtoList = JSON.parseArray(courseJson, CourseDTO.class);
+        if (courseDtoList == null || courseDtoList.isEmpty()) {
+            throw new GlobalBusinessException("课程信息不存在");
+        }
+        CourseDTO courseDTO = courseDtoList.get(0);
+        Course course = courseDTO.getCourse();
+
+        // 3. 创建主订单
+        Date now = new Date();
+        CourseOrder courseOrder = new CourseOrder();
+        courseOrder.setOrderNo(orderNo);
+        courseOrder.setUserId(userId);
+        courseOrder.setTotalAmount(amount);
+        courseOrder.setTotalCount(1);
+        courseOrder.setPayType(payType);
+        courseOrder.setStatusOrder(CourseOrder.OrderComplete); // 直接设为已支付
+        courseOrder.setTitle("秒杀课程[" + course.getName() + "]");
+        courseOrder.setCreateTime(now);
+        courseOrder.setUpdateTime(now);
+        courseOrder.setVersion(0);
+
+        // 4. 保存主订单
+        courseOrderMapper.insert(courseOrder);
+
+        // 5. 创建订单明细
+        CourseOrderItem item = new CourseOrderItem();
+        item.setOrderId(courseOrder.getId());
+        item.setOrderNo(orderNo);
+        item.setCourseId(courseId);
+        item.setCourseName(course.getName());
+        item.setCoursePic(course.getPic());
+        item.setAmount(amount);
+        item.setCount(1);
+        item.setCreateTime(now);
+        item.setUpdateTime(now);
+        item.setVersion(0);
+
+        // 6. 保存订单明细
+        courseOrderItemMapper.insert(item);
+
+        // 7. 调用课程服务添加学习记录
+        CourseUserLearnDTO learnDTO = new CourseUserLearnDTO();
+        learnDTO.setCourseIds(Arrays.asList(courseId));
+        learnDTO.setLoginId(userId);
+        learnDTO.setCourseOrderNo(orderNo);
+        learnDTO.setStatus(CourseUserLearnDTO.BUYED);
+        learnDTO.setStartTime(now);
+        learnDTO.setEndTime(null);
+        learnDTO.setCreateTime(now);
+        JSONResult learnResult = courseFeignApi.addCourseUserLearn(learnDTO);
+        if (!learnResult.isSuccess()) {
+            log.warn("秒杀订单添加学习记录失败，订单号：{}", orderNo);
+        }
+
+        log.info("秒杀订单保存成功，订单号：{}, 用户ID: {}, 课程ID: {}, 金额：{}", orderNo, userId, courseId, amount);
+        return orderNo;
     }
 
 }

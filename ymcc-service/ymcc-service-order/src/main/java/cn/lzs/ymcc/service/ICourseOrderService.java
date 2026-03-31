@@ -57,4 +57,15 @@ public interface ICourseOrderService extends IService<CourseOrder> {
      * @return
      */
     String killPlaceOrder(KillOrderParamDto dto);
+
+    /**
+     * 保存秒杀订单（简化版，直接标记为已支付）
+     * @param orderNo 订单号
+     * @param courseId 课程ID
+     * @param amount 金额
+     * @param userId 用户ID
+     * @param payType 支付方式
+     * @return 订单号
+     */
+    String saveKillOrder(String orderNo, Long courseId, java.math.BigDecimal amount, Long userId, Integer payType);
 }

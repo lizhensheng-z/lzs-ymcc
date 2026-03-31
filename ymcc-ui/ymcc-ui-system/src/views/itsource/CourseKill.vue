@@ -40,11 +40,11 @@
 			</el-table-column>
 			<el-table-column prop="endTime" label="结束时间" >
 			</el-table-column>
-			<el-table-column label="操作" width="180">
+			<el-table-column label="操作" width="200">
 				<template scope="scope">
-					<el-button size="small" @click="edit( scope.row)" icon="el-icon-edit" type="primary">编辑</el-button>
+					<el-button size="mini" @click="edit( scope.row)" icon="el-icon-edit" type="primary">编辑</el-button>
 <!--					<el-button size="small" @click="edit( scope.row)" icon="el-icon-edit">取消发布</el-button>-->
-					<el-button type="danger" size="small" @click="del( scope.row)" icon="el-icon-close">删除</el-button>
+					<el-button type="danger" size="mini" @click="del( scope.row)" icon="el-icon-delete">删除</el-button>
 				</template>
 			</el-table-column>
 		</el-table>
@@ -235,7 +235,7 @@
 				var ids = this.sels.map(item => item.id);
 				this.$confirm('确认删除选中记录吗？', '提示', { type: 'warning' }).then(() => {
 					this.listLoading = true;
-					this.$http.delete("/kill/killCourse/batch",ids).then(result=>{
+					this.$http.post("/kill/killCourse/batch",ids).then(result=>{
 						let {success , data, message ,code} = result.data;
 						if(success){
 							this.$message({ message: "提交成功", type: 'success' });

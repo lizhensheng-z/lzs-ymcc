@@ -75,13 +75,15 @@ export default {
               const data = res.data.data
               localStorage.setItem('U-TOKEN', data.access_token)
               localStorage.setItem('R-TOKEN', data.refresh_token)
-              // 将秒数转换为过期时间戳
-              const expiresTime = new Date().getTime() + (data.expiresTime || 7200) * 1000
+              // 将秒数转换为过期时间戳（兼容 expires_in 和 expiresTime）
+              const expiresIn = data.expires_in || data.expiresTime || 7200
+              const expiresTime = new Date().getTime() + expiresIn * 1000
               localStorage.setItem('expiresTime', expiresTime)
               // 从 token 中解析用户信息 (JWT payload 是第二部分)
               try {
                 const payload = JSON.parse(atob(data.access_token.split('.')[1]))
-                const userData = JSON.parse(payload.user_name)
+                // 新的 JWT 格式，用户信息在 login 字段
+                const userData = JSON.parse(payload.login)
                 localStorage.setItem('user', JSON.stringify(userData))
               } catch (e) {
                 // 解析失败则只保存用户名

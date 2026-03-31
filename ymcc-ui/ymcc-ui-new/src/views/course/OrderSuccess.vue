@@ -63,7 +63,7 @@ export default {
     }
   },
   mounted() {
-    this.orderId = this.$route.query.orderId || '未知'
+    this.orderId = this.$route.query.orderNo || this.$route.query.orderId || '未知'
     this.checkLogin()
   },
   methods: {

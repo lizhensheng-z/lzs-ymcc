@@ -94,7 +94,9 @@ export default {
       userInfo: {},
       courses: [],
       paymentMethod: 'alipay',
-      submitting: false
+      submitting: false,
+      isKillOrder: false,  // 是否是秒杀订单
+      orderNo: ''          // 秒杀订单号
     }
   },
   computed: {
@@ -104,7 +106,20 @@ export default {
   },
   mounted() {
     this.checkLogin()
-    this.loadCourses()
+
+    // 检查是否是秒杀订单
+    const orderNo = this.$route.query.orderNo
+    const orderType = this.$route.query.type
+
+    if (orderNo && orderType === 'kill') {
+      // 秒杀订单，从后端获取预订单信息
+      this.isKillOrder = true
+      this.orderNo = orderNo
+      this.loadPreOrder(orderNo)
+    } else {
+      // 普通订单，从购物车加载
+      this.loadCourses()
+    }
   },
   methods: {
     checkLogin() {
@@ -155,6 +170,61 @@ export default {
         return
       }
 
+      if (this.isKillOrder) {
+        // 秒杀订单直接支付
+        this.payKillOrder()
+      } else {
+        // 普通订单下单
+        this.placeNormalOrder()
+      }
+    },
+    // 加载秒杀预订单
+    loadPreOrder(orderNo) {
+      this.$http.get(`/kill/killCourse/preOrder/${orderNo}`)
+        .then(res => {
+          if (res.data.success) {
+            const preOrder = res.data.data
+            this.courses = [{
+              id: preOrder.courseId,
+              name: preOrder.courseName || '秒杀课程',
+              price: preOrder.totalAmount,
+              pic: preOrder.coursePic
+            }]
+          } else {
+            this.$message.error('订单信息加载失败')
+            this.$router.push('/kill')
+          }
+        })
+        .catch(() => {
+          this.$message.error('订单信息加载失败')
+          this.$router.push('/kill')
+        })
+    },
+    // 秒杀订单支付
+    payKillOrder() {
+      this.submitting = true
+      this.$http.post('/kill/killCourse/payKillOrder', {
+        orderNo: this.orderNo,
+        payType: this.paymentMethod === 'alipay' ? 1 : (this.paymentMethod === 'wechat' ? 2 : 0)
+      })
+        .then(res => {
+          if (res.data.success) {
+            this.$message.success('支付成功！')
+            // 跳转成功页
+            this.$router.push(`/order/success?orderNo=${this.orderNo}`)
+          } else {
+            this.$message.error(res.data.message || '支付失败')
+          }
+        })
+        .catch(() => {
+          this.$message.error('支付请求失败')
+        })
+        .finally(() => {
+          this.submitting = false
+        })
+    },
+    // 普通订单下单
+    placeNormalOrder() {
       this.submitting = true
 
       // 创建订单 - 调用后端 placeOrder 接口

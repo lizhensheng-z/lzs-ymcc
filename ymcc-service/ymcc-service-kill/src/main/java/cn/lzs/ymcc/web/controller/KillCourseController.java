@@ -1,6 +1,7 @@
 package cn.lzs.ymcc.web.controller;
 
 import cn.lzs.ymcc.dto.KillParamDto;
+import cn.lzs.ymcc.dto.PreOrderDto;
 import cn.lzs.ymcc.service.IKillCourseService;
 import cn.lzs.ymcc.domain.KillCourse;
 import cn.lzs.ymcc.query.KillCourseQuery;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/killCourse")
@@ -33,6 +35,37 @@ public class KillCourseController {
     public JSONResult kill(@RequestBody @Valid KillParamDto dto) {
         String orderNo = killCourseService.kill(dto);
         return JSONResult.success(orderNo);
+    }
+
+    /**
+     * 秒杀订单支付（简化版，直接支付成功）
+     *
+     * @param params 包含 orderNo 和 payType
+     * @return 订单号
+     */
+    @PostMapping("/payKillOrder")
+    public JSONResult payKillOrder(@RequestBody Map<String, Object> params) {
+        String orderNo = (String) params.get("orderNo");
+        Integer payType = params.get("payType") != null ? (Integer) params.get("payType") : 1;
+
+        if (orderNo == null || orderNo.isEmpty()) {
+            return JSONResult.error("订单号不能为空");
+        }
+
+        String resultOrderNo = killCourseService.payKillOrder(orderNo, payType);
+        return JSONResult.success(resultOrderNo);
+    }
+
+    /**
+     * 从Redis查询预订单
+     *
+     * @param orderNo 订单号
+     * @return 预订单信息
+     */
+    @GetMapping("/preOrder/{orderNo}")
+    public JSONResult getPreOrder(@PathVariable("orderNo") String orderNo) {
+        PreOrderDto preOrder = killCourseService.getPreOrder(orderNo);
+        return JSONResult.success(preOrder);
     }
 
     /**
@@ -69,6 +102,17 @@ public class KillCourseController {
             killCourseService.updateById(killCourse);
         } else {
             killCourseService.addKillCourse(killCourse);
+        }
+        return JSONResult.success();
+    }
+
+    /**
+     * 批量删除对象 - 必须放在 /{id} 前面
+     */
+    @RequestMapping(value = "/batch", method = RequestMethod.POST)
+    public JSONResult batchDelete(@RequestBody Long[] ids) {
+        for (Long id : ids) {
+            killCourseService.deleteById(id);
         }
         return JSONResult.success();
     }

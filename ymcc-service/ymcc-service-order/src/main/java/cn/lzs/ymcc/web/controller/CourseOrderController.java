@@ -109,4 +109,17 @@ public class CourseOrderController {
         page = courseOrderService.selectPage(page);
         return JSONResult.success(new PageList<CourseOrder>(page.getTotal(),page.getRecords()));
     }
+
+    /**
+     * 保存秒杀订单（简化版，直接标记为已支付）
+     */
+    @PostMapping("/saveKillOrder")
+    public JSONResult saveKillOrder(@RequestParam("orderNo") String orderNo,
+                                    @RequestParam("courseId") Long courseId,
+                                    @RequestParam("amount") java.math.BigDecimal amount,
+                                    @RequestParam("userId") Long userId,
+                                    @RequestParam("payType") Integer payType) {
+        String resultOrderNo = courseOrderService.saveKillOrder(orderNo, courseId, amount, userId, payType);
+        return JSONResult.success(resultOrderNo);
+    }
 }

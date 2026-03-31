@@ -85,9 +85,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         login.setUsername(phone);//手机号充当默认用户名
         login.setPassword(passwordEncoder.encode(phoneRegisterDTO.getPassword()));
         login.setType(SystemConstants.REGISTER_TYPE_USER);
-        // 设置OAuth2客户端信息
-        login.setClientId(SystemConstants.DEFAULT_CLIENT_ID);
-        login.setClientSecret(SystemConstants.DEFAULT_CLIENT_SECRET);
         // 设置账户状态
         login.setEnabled(true);
         login.setAccountNonExpired(true);

@@ -40,6 +40,36 @@
       </el-carousel>
     </div>
 
+    <!-- 秒杀专区入口 -->
+    <div class="kill-section" v-if="killCourses.length > 0">
+      <div class="section-header">
+        <h2>限时秒杀</h2>
+        <router-link to="/kill">查看全部</router-link>
+      </div>
+      <div class="kill-list">
+        <div class="kill-card" v-for="course in killCourses" :key="course.id" @click="goKillDetail(course)">
+          <div class="kill-img">
+            <img v-if="course.coursePic" :src="course.coursePic" :alt="course.courseName">
+            <div v-else class="kill-placeholder">{{ (course.courseName || '秒').charAt(0) }}</div>
+            <div class="kill-badge">秒杀</div>
+          </div>
+          <div class="kill-info">
+            <h3>{{ course.courseName }}</h3>
+            <div class="kill-price">
+              <span class="current-price">¥{{ course.killPrice }}</span>
+              <span class="original-price">¥{{ course.price }}</span>
+            </div>
+            <div class="kill-status">
+              <span v-if="course.isUnbegin" class="status unbegin">即将开始</span>
+              <span v-else-if="course.isKilling" class="status killing">秒杀中</span>
+              <span v-else class="status ended">已结束</span>
+              <span class="count">库存: {{ course.killCount }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- 课程列表 -->
     <div class="course-section">
       <div class="section-header">
@@ -93,6 +123,7 @@ export default {
     return {
       isLoggedIn: false,
       userInfo: {},
+      killCourses: [],  // 秒杀课程列表
       banners: [
         { image: '', title: '首页轮播1', bg: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', text: '云课教育 - 开启学习之旅' },
         { image: '', title: '首页轮播2', bg: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', text: '精品课程 等你来学' },
@@ -112,6 +143,7 @@ export default {
   mounted() {
     this.checkLogin()
     this.loadHotCourses()
+    this.loadKillCourses()
   },
   methods: {
     checkLogin() {
@@ -168,6 +200,24 @@ export default {
     },
     goDetail(id) {
       this.$router.push(`/course/detail/${id}`)
+    },
+    // 加载秒杀课程
+    loadKillCourses() {
+      this.$http.get('/kill/killCourse/online/all')
+        .then(res => {
+          if (res.data.success) {
+            // 只取前4个展示在首页
+            this.killCourses = (res.data.data || []).slice(0, 4)
+          }
+        })
+        .catch(() => {
+          // 加载失败不显示秒杀专区
+          this.killCourses = []
+        })
+    },
+    // 跳转秒杀详情
+    goKillDetail(course) {
+      this.$router.push(`/kill/detail/${course.id}/${course.activityId}`)
     },
     goCategory(id) {
       this.$router.push(`/course/list?type=${id}`)
@@ -265,6 +315,153 @@ export default {
       opacity: 0.9;
     }
   }
+}
+
+// 秒杀专区样式
+.kill-section {
+  width: 1200px;
+  margin: 40px auto;
+  padding: 0 20px;
+
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+
+    h2 {
+      margin: 0;
+      font-size: 24px;
+      color: #ff4d4f;
+    }
+
+    a {
+      color: #667eea;
+      text-decoration: none;
+    }
+  }
+}
+
+.kill-list {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.kill-card {
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s;
+  border: 2px solid transparent;
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 16px rgba(255, 77, 79, 0.2);
+    border-color: #ff4d4f;
+  }
+
+  .kill-img {
+    position: relative;
+    height: 140px;
+    background: linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .kill-placeholder {
+      font-size: 48px;
+      font-weight: bold;
+      color: #fff;
+      opacity: 0.8;
+    }
+
+    .kill-badge {
+      position: absolute;
+      top: 0;
+      right: 0;
+      background: #ff4d4f;
+      color: #fff;
+      padding: 4px 12px;
+      font-size: 12px;
+      border-radius: 0 0 0 8px;
+    }
+  }
+
+  .kill-info {
+    padding: 15px;
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 16px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .kill-price {
+      margin-bottom: 10px;
+
+      .current-price {
+        color: #ff4d4f;
+        font-size: 20px;
+        font-weight: bold;
+      }
+
+      .original-price {
+        color: #999;
+        font-size: 14px;
+        text-decoration: line-through;
+        margin-left: 10px;
+      }
+    }
+
+    .kill-status {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      .status {
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+
+        &.unbegin {
+          background: #fff7e6;
+          color: #fa8c16;
+        }
+
+        &.killing {
+          background: #fff1f0;
+          color: #ff4d4f;
+          animation: pulse 1s infinite;
+        }
+
+        &.ended {
+          background: #f5f5f5;
+          color: #999;
+        }
+      }
+
+      .count {
+        color: #999;
+        font-size: 12px;
+      }
+    }
+  }
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.6; }
+  100% { opacity: 1; }
 }
 
 .course-section {

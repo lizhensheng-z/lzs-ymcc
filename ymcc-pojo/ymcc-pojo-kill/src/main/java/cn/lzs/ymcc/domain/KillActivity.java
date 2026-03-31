@@ -27,8 +27,11 @@ public class KillActivity extends Model<KillActivity> {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @TableField("time_str")
     private String timeStr;
+/**
+     * 秒杀开始时间
+     */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    @TableField("begin_time")
+    @TableField("start_time")
     private Date startTime;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @TableField("end_time")

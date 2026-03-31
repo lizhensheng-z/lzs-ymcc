@@ -13,7 +13,7 @@ spring:
   datasource:
     username: root
     password: 123456
-    url: jdbc:mysql://101.43.63.144:3306/ymcc_kill?useSSL=false&serverTimezone=UTC
+    url: jdbc:mysql://101.43.63.144:3306/ymcc_kill?useSSL=false&serverTimezone=Asia/Shanghai
     driver-class-name: com.mysql.cj.jdbc.Driver
     type: com.alibaba.druid.pool.DruidDataSource
   redis:

@@ -42,6 +42,10 @@ import Permission from './views/itsource/Permission'
 import CourseKill from './views/itsource/CourseKill'
 import KillActivity from './views/itsource/KillActivity'
 
+// 秒杀页面
+import KillList from './views/kill/KillList.vue'
+import KillDetail from './views/kill/KillDetail.vue'
+
 let routes = [
     // ==================== 用户端路由 ====================
     {
@@ -148,6 +152,18 @@ let routes = [
         name: '消息中心',
         hidden: false,
         meta: { requiresAuth: true }
+    },
+    {
+        path: '/kill',
+        component: KillList,
+        name: '秒杀专区',
+        hidden: false
+    },
+    {
+        path: '/kill/detail/:id/:activityId',
+        component: KillDetail,
+        name: '秒杀详情',
+        hidden: true
     },
 
     // ==================== 管理后台路由 ====================

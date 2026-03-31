@@ -95,8 +95,8 @@ body {
 	.el-table__header-wrapper {
 		.el-table__header {
 			th {
-				background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-				color: #fff !important;
+				background: #f5f7fa !important;
+				color: #004adf30 !important;
 				font-weight: 500;
 				padding: 14px 0;
 				border-bottom: none !important;

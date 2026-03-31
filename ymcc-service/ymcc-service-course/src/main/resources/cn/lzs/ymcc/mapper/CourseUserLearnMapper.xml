@@ -23,7 +23,7 @@
             #{item.loginId},
             #{item.startTime},
             #{item.endTime},
-            #{item.status},
+            #{item.state},
             #{item.courseId},
             #{item.courseOrderNo},
             #{item.createTime}

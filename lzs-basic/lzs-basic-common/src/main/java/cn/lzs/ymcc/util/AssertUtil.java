@@ -1,5 +1,7 @@
 package cn.lzs.ymcc.util;
 
+import cn.lzs.ymcc.Exception.GlobalBusinessException;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,7 +37,7 @@ public class AssertUtil {
     --------------------------------------------------------**/
     public static void isNull(Object obj , String message){
         if(obj != null){
-            throw new RuntimeException(message);
+            throw new GlobalBusinessException(message);
         }
     }
     public static void isNotNull(Object obj , String message){

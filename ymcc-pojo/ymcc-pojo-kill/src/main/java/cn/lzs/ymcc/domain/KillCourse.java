@@ -69,7 +69,7 @@ public class KillCourse extends Model<KillCourse> {
     /**
      * 秒杀结束时间
      */
-    @JsonFormat(pattern = "yyyy-mm-dd:HH-mm-ss")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @TableField("end_time")
     private Date endTime;
     /**
@@ -108,6 +108,7 @@ public class KillCourse extends Model<KillCourse> {
      *  如果是秒杀中: endTime - now  : 秒杀结束时间减去现在时间
      * @return
      */
+    @com.alibaba.fastjson.annotation.JSONField(serialize = false, deserialize = false)
     public Long getTimeDiffMill() {
         Date now = new Date();
         Date startTime = getStartTime();
@@ -126,17 +127,20 @@ public class KillCourse extends Model<KillCourse> {
     }
 
     /**
-     * 处理秒杀按钮
+     * 处理秒杀按钮 - 判断是否未开始
      *
-     * @return
+     * @return true表示未开始，false表示已开始
      */
+    @com.alibaba.fastjson.annotation.JSONField(serialize = false, deserialize = false)
     public Boolean isUnbegin() {
         Date now = new Date();
+
         Date startTime = getStartTime();
         if (startTime == null) {
             return false;
         }
-        if (now.after(startTime)) { // 当时时间如果在秒杀开始之前
+        // 修复：当前时间在开始时间之前，才是"未开始"
+        if (now.before(startTime)) {
             return true;
         }
         return false;
@@ -147,6 +151,7 @@ public class KillCourse extends Model<KillCourse> {
      * 秒杀中,返回true
      * @return
      */
+    @com.alibaba.fastjson.annotation.JSONField(serialize = false, deserialize = false)
     public Boolean isKilling(){
         Date now = new Date();
         Date startTime = getStartTime();
@@ -163,6 +168,7 @@ public class KillCourse extends Model<KillCourse> {
     /**
      *  返回秒杀课程状态名称
      */
+    @com.alibaba.fastjson.annotation.JSONField(serialize = false, deserialize = false)
     public String getKillStatusName() {
         Date now = new Date();
         Date startTime = getStartTime();

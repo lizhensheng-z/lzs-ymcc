@@ -144,8 +144,17 @@ export default {
                 const { access_token, refresh_token, expiresTime } = res.data.data;
                 localStorage.setItem("U-TOKEN", access_token);
                 localStorage.setItem("R-TOKEN", refresh_token);
-                localStorage.setItem("expiresTime", expiresTime);
-                localStorage.setItem("user", JSON.stringify({ username: this.ruleForm2.account }));
+                // 将秒数转换为过期时间戳
+                const expiresTimeStamp = new Date().getTime() + (expiresTime || 7200) * 1000;
+                localStorage.setItem("expiresTime", expiresTimeStamp);
+                // 从 JWT 解析用户信息
+                try {
+                  const payload = JSON.parse(atob(access_token.split('.')[1]));
+                  const userData = JSON.parse(payload.login);
+                  localStorage.setItem("user", JSON.stringify(userData));
+                } catch (e) {
+                  localStorage.setItem("user", JSON.stringify({ username: this.ruleForm2.account }));
+                }
 
                 this.$message.success('登录成功，欢迎回来！');
                 setTimeout(() => {

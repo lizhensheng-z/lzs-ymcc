@@ -1,16 +1,19 @@
 package cn.lzs.ymcc.service.impl;
 
 import cn.lzs.ymcc.GlobalExceptionCode;
+import cn.lzs.ymcc.api.OrderFeignApi;
 import cn.lzs.ymcc.domain.KillActivity;
 import cn.lzs.ymcc.domain.KillCourse;
 import cn.lzs.ymcc.dto.KillParamDto;
 import cn.lzs.ymcc.dto.PreOrderDto;
 import cn.lzs.ymcc.mapper.KillCourseMapper;
+import cn.lzs.ymcc.result.JSONResult;
 import cn.lzs.ymcc.service.ICourseMarketService;
 import cn.lzs.ymcc.service.IKillActivityService;
 import cn.lzs.ymcc.service.IKillCourseService;
 import cn.lzs.ymcc.util.AssertUtil;
 import cn.lzs.ymcc.util.CodeGenerateUtils;
+import cn.lzs.ymcc.util.LoginContext;
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.baomidou.mybatisplus.service.impl.ServiceImpl;
@@ -48,6 +51,9 @@ public class KillCourseServiceImpl extends ServiceImpl<KillCourseMapper, KillCou
     @Autowired
     private ICourseMarketService courseMarket;
 
+    @Autowired
+    private OrderFeignApi orderFeignApi;
+
     /**
      *  添加秒杀课程
      * @param killCourse
@@ -61,6 +67,7 @@ public class KillCourseServiceImpl extends ServiceImpl<KillCourseMapper, KillCou
         wrapper.eq("activity_id",killCourse.getActivityId());
         KillCourse tmp = selectOne(wrapper);
         // 判断秒杀课程和活动是否存在
+
         AssertUtil.isNull(tmp, GlobalExceptionCode.KILL_ACTIVITY_IS_NOTNULL_ERROR.getMessage()); // 存在就不能在添加秒杀课程了
 
         // 查询出秒杀活动
@@ -87,8 +94,11 @@ public class KillCourseServiceImpl extends ServiceImpl<KillCourseMapper, KillCou
     public List<KillCourse> onlineAll() {
         // 从redis中查询所有秒杀活动, 拿到所有以activity: 开头的Key
         Set<Object> keys = redisTemplate.keys("activity:*");
-        // 校验redis中存储的秒杀活动是否存在
-        AssertUtil.isNotNull(keys,GlobalExceptionCode.KILL_ACTIVITY_IS_NULL_ERROR.getMessage());
+
+        // 如果没有数据，返回空列表
+        if (keys == null || keys.isEmpty()) {
+            return new ArrayList<>();
+        }
 
         // 要给前端返回一个List<KillCourse>数组, 创建一个空的List,往里面追加redis中的商品
         List<KillCourse> killCourses = new ArrayList<>();
@@ -96,9 +106,20 @@ public class KillCourseServiceImpl extends ServiceImpl<KillCourseMapper, KillCou
         // 遍历从redis中获取到的秒杀活动
         for (Object key : keys) {
             // 通过遍历到的每一个秒杀活动,key去redis中获取活动的value (秒杀活动,商品id,商品库存)
-            List values = redisTemplate.opsForHash().values(key);
-            // 通过List的addAll():添加所有的, [秒杀活动,商品id,商品库存]
-            killCourses.addAll(values);
+            List<Object> values = redisTemplate.opsForHash().values(key);
+            if (values != null && !values.isEmpty()) {
+                for (Object value : values) {
+                    // 从Redis获取的可能是旧数据，从数据库重新查询获取最新状态
+                    if (value instanceof KillCourse) {
+                        KillCourse redisCourse = (KillCourse) value;
+                        // 从数据库查询最新数据，确保状态实时计算
+                        KillCourse dbCourse = selectById(redisCourse.getId());
+                        if (dbCourse != null) {
+                            killCourses.add(dbCourse);
+                        }
+                    }
+                }
+            }
         }
         return killCourses;
     }
@@ -111,9 +132,9 @@ public class KillCourseServiceImpl extends ServiceImpl<KillCourseMapper, KillCou
      */
     @Override
     public KillCourse onlineOne(Long killId, Long activityId) {
-        String key = "activity:"+activityId;
-        return  (KillCourse) redisTemplate.opsForHash().get(key, killId.toString());
-
+        // 从数据库查询，确保状态实时计算
+        KillCourse killCourse = selectById(killId);
+        return killCourse;
     }
 
     /**
@@ -134,8 +155,8 @@ public class KillCourseServiceImpl extends ServiceImpl<KillCourseMapper, KillCou
      */
     @Override
     public String kill(KillParamDto dto) {
-        // 1.创建登录人Id
-        Long loginId = 3L;
+        // 1.从登录上下文获取当前用户ID
+        Long loginId = LoginContext.getLogin().getId();
         // 创建登录人+秒杀课程ID,Key存入redis
         String repeatKy = loginId + ":" + dto.getKillCourseId();
         // 查询redis,repeatKy是否存在
@@ -169,6 +190,50 @@ public class KillCourseServiceImpl extends ServiceImpl<KillCourseMapper, KillCou
         redisTemplate.opsForValue().set(orderNo,preOrderDto);
         // 为了保证一个人只能购买一个课程一次,单独存入redis
         redisTemplate.opsForValue().set(repeatKy,orderNo);
+        return orderNo;
+    }
+
+    /**
+     * 从Redis查询预订单
+     * @param orderNo 订单号
+     * @return 预订单信息
+     */
+    @Override
+    public PreOrderDto getPreOrder(String orderNo) {
+        return (PreOrderDto) redisTemplate.opsForValue().get(orderNo);
+    }
+
+    /**
+     * 支付秒杀订单（简化版，直接支付成功）
+     * @param orderNo 订单号
+     * @param payType 支付方式
+     * @return 订单号
+     */
+    @Override
+    public String payKillOrder(String orderNo, Integer payType) {
+        // 1. 从Redis获取预订单
+        PreOrderDto preOrder = (PreOrderDto) redisTemplate.opsForValue().get(orderNo);
+        AssertUtil.isNotNull(preOrder, "预订单不存在或已过期");
+
+        // 2. 调用订单服务保存订单（直接标记为已支付）
+        JSONResult result = orderFeignApi.saveKillOrder(
+                orderNo,
+                preOrder.getCourseId(),
+                preOrder.getTotalAmount(),
+                preOrder.getUserId(),
+                payType
+        );
+
+        if (!result.isSuccess()) {
+            throw new RuntimeException("订单保存失败：" + result.getMessage());
+        }
+
+        // 3. 删除Redis中的预订单
+        redisTemplate.delete(orderNo);
+
+        // 4. 删除重复购买标记（可选，如果想限制用户只能购买一次，可以保留）
+        // redisTemplate.delete(preOrder.getUserId() + ":" + preOrder.getCourseId());
+
         return orderNo;
     }
 

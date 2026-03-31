@@ -55,11 +55,15 @@ public class KillActivityServiceImpl extends ServiceImpl<KillActivityMapper, Kil
         boolean before = now.before(killActivity.getEndTime()); // 校验活动开始时间必须在活动结束之前
         AssertUtil.isTrue(before,GlobalExceptionCode.KILL_ACTIVITY_TIME_ERROR.getMessage());
 
-        // 校验活动必须存在
+        // 校验活动必须存在秒杀课程
         EntityWrapper<KillCourse> wrapper = new EntityWrapper<>();
         wrapper.eq("activity_id",killActivity.getId());
         List<KillCourse> killCourses = killCourseService.selectList(wrapper); // 注入秒杀课程,查询:秒杀课程对应秒杀活动
-        AssertUtil.isNotNull(killCourses,GlobalExceptionCode.KILL_ACTIVITY_IS_NULL_ERROR.getMessage()); // 校验当前秒杀课程的是否存在秒杀活动
+
+        // 修复：同时检查 null 和 empty
+        if (killCourses == null || killCourses.isEmpty()) {
+            throw new RuntimeException("该活动下没有秒杀课程，请先添加秒杀课程");
+        }
 
         // 修改活动状态 + 时间
         killActivity.setPublishStatus(KillActivity.ACTIVITY_PUBLISH); // 设置活动发布状态为已发布
@@ -69,17 +73,27 @@ public class KillActivityServiceImpl extends ServiceImpl<KillActivityMapper, Kil
         // 活动下的产品[课程]: 存储到redisson的信号量中
         // 遍历多个秒杀商品(killCourses),获取到每个秒杀商品的id,和库存存储到redisson的信号量中
         for (KillCourse killCourse : killCourses) {
+            // 同步活动的最新时间到秒杀课程（防止活动时间被修改后，课程时间未同步）
+            killCourse.setStartTime(killActivity.getStartTime());
+            killCourse.setEndTime(killActivity.getEndTime());
+            killCourse.setTimeStr(killActivity.getTimeStr());
+            // 更新秒杀课程状态为已发布
+            killCourse.setPublishStatus(KillActivity.ACTIVITY_PUBLISH);
+            killCourse.setPublishTime(now);
+            killCourseService.updateById(killCourse);
+
             // 获取到秒杀商品的id,将商品id作为Key存入到redisson的信号量中
-            String xiaoKey = killCourse.getId().toString(); // 信号量的Key: 遍历到的每个商品Id      将每个商品对应的库存使用信号量存储到redis
+            String xiaoKey = killCourse.getId().toString(); // 信号量的Key: 遍历到的每个商品Id
             // 获取semaphore信号量对象
-            RSemaphore semaphore = redissonClient.getSemaphore(xiaoKey); // 使用redisson获取到信号量,将秒杀商品id作为key传入,
-            boolean trySetPermits = semaphore.trySetPermits(killCourse.getKillCount());  // 设置信号量中的数量,将商品的库存量传入
-            if (!trySetPermits){ // 如果库存没有了,返回false
-                continue; // 兜底
-            }
-            // 库存设置成功,我们才把秒杀课程存储到redis
-            String daKey = "activity:" + killActivity.getId(); // 大ke: 秒杀活动id
-            // 使用redis的hash存储秒杀活动下的商品   大Key:活动id  小Key:秒杀商品id value: 商品库存
+            RSemaphore semaphore = redissonClient.getSemaphore(xiaoKey);
+
+            // 修复：先删除已存在的信号量，再重新设置
+            semaphore.delete();
+            semaphore.trySetPermits(killCourse.getKillCount());
+
+            // 把秒杀课程存储到redis
+            String daKey = "activity:" + killActivity.getId(); // 大key: 秒杀活动id
+            // 使用redis的hash存储秒杀活动下的商品   大Key:活动id  小Key:秒杀商品id value: 商品
             redisTemplate.opsForHash().put(daKey,killCourse.getId().toString(),killCourse); // 小key:商品id,value:商品
         }
     }

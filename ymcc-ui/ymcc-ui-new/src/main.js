@@ -69,7 +69,7 @@ async function doRequest () {
 
         var token = data.data.data.access_token;
         var refresh_token = data.data.data.refresh_token;
-        var expiresIn = data.data.data.expiresTime; // 有效期秒数
+        var expiresIn = data.data.data.expires_in || data.data.data.expiresTime || 7200; // 有效期秒数
 
         // 将秒数转换为过期时间戳
         var expiresTime = new Date().getTime() + expiresIn * 1000;

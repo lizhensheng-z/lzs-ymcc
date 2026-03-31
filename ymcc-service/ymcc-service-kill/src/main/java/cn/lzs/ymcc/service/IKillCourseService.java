@@ -2,6 +2,7 @@ package cn.lzs.ymcc.service;
 
 import cn.lzs.ymcc.domain.KillCourse;
 import cn.lzs.ymcc.dto.KillParamDto;
+import cn.lzs.ymcc.dto.PreOrderDto;
 import com.baomidou.mybatisplus.service.IService;
 
 import java.util.List;
@@ -42,5 +43,20 @@ public interface IKillCourseService extends IService<KillCourse> {
      * @return
      */
     String kill(KillParamDto dto);
+
+    /**
+     * 从Redis查询预订单
+     * @param orderNo 订单号
+     * @return 预订单信息
+     */
+    PreOrderDto getPreOrder(String orderNo);
+
+    /**
+     * 支付秒杀订单（简化版，直接支付成功）
+     * @param orderNo 订单号
+     * @param payType 支付方式
+     * @return 订单号
+     */
+    String payKillOrder(String orderNo, Integer payType);
 
 }
