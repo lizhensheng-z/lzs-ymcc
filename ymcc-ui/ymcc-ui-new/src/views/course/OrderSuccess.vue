@@ -47,7 +47,7 @@
 
     <!-- 底部 -->
     <div class="footer">
-      <p>&copy; 2024 云课教育 版权所有</p>
+      <p>&copy; 2026 云课教育 版权所有</p>
     </div>
   </div>
 </template>

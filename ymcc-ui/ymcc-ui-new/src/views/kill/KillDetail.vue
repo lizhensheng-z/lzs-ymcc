@@ -31,8 +31,8 @@
           <!-- 课程信息 -->
           <div class="course-info-card">
             <div class="course-cover">
-              <img v-if="course.coursePic" :src="course.coursePic" :alt="course.courseName">
-              <div v-else class="cover-placeholder">{{ (course.courseName || '课').charAt(0) }}</div>
+              <img v-if="course.coursePic" :src="course.coursePic" :alt="course.courseName" @error="handleImgError">
+              <img v-else src="../../assets/java.jpeg" :alt="course.courseName">
               <div class="kill-badge">秒杀</div>
             </div>
             <div class="course-meta">
@@ -115,7 +115,7 @@
 
     <!-- 底部 -->
     <div class="footer">
-      <p>&copy; 2024 云课教育 版权所有</p>
+      <p>&copy; 2026 云课教育 版权所有</p>
     </div>
   </div>
 </template>
@@ -275,6 +275,9 @@ export default {
       } finally {
         this.killing = false
       }
+    },
+    handleImgError(e) {
+      e.target.src = require('../../assets/java.jpeg')
     },
     logout() {
       localStorage.clear()

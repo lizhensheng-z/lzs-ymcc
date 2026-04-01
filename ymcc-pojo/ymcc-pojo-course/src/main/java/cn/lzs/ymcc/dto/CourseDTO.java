@@ -8,7 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author 李振生
@@ -21,7 +21,7 @@ public class CourseDTO {
     private CourseDetail courseDetail;
     private CourseMarket courseMarket;
     private CourseResource courseResource;
-    private ArrayList<Long> teacherIds;
+    private List<Long> teacherIds;
 
     public CourseDTO(Course course, CourseMarket courseMarket) {
         this.course = course;

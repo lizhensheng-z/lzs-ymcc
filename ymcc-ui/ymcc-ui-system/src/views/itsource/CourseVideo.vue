@@ -4,7 +4,7 @@
 		<el-col :span="24" class="toolbar" style="padding-bottom: 0px;">
 			<el-form :inline="true" :model="filters">
 				<el-form-item>
-					<el-input v-model="filters.keyword" placeholder="姓名"></el-input>
+					<el-input v-model="filters.keyword" placeholder="视频名称/文件名" clearable @keyup.enter.native="getTableData"></el-input>
 				</el-form-item>
 				<el-form-item>
 					<el-button type="primary" v-on:click="getTableData"  size="small" icon="el-icon-search">查询视频</el-button>
@@ -113,7 +113,7 @@
 				</el-form-item>
 
 				<el-form-item label-width="0px">
-					<el-pagination layout="prev, pager, next"  :page-size="10" :total="0" style="float:right;">
+					<el-pagination layout="prev, pager, next" @current-change="handleCoursePageChange" :page-size="10" :total="courseTotal" style="float:right;">
 					</el-pagination>
 				</el-form-item>
 			</el-form>
@@ -156,7 +156,8 @@
 				//选择章节===================
 				courseChapters:[],
 				//课程弹窗分页
-				courseTotal: 0
+				courseTotal: 0,
+				coursePage: 1
 			}
 
 		},
@@ -174,7 +175,7 @@
 			//加载课程==============================
 			getCourses(){
 				let para = {
-					page: 1,
+					page: this.coursePage,
 					rows: 10,
 					keyword: this.courseAddForm.keyword || ''
 				};
@@ -182,6 +183,11 @@
 					this.courses = result.data.data.rows;
 					this.courseTotal = result.data.data.total;
 				});
+			},
+			//课程分页切换
+			handleCoursePageChange(val){
+				this.coursePage = val;
+				this.getCourses();
 			},
 			selectCourse(row){
 				this.courseAddForm.keyword = "";
@@ -260,18 +266,25 @@
 				this.page = val;
 				this.getTableData();
 			},
-			//获取用户列表
+			//获取视频列表（支持按视频名称模糊查询）
 			getTableData() {
 				let para = {
 					page: this.page,
 					rows: 10,
-					keyword: this.filters.keyword
+					name: this.filters.keyword,  // 视频名称模糊查询
+					keyword: this.filters.keyword  // 兼容后端的 keyword 字段
 				};
 				this.listLoading = true; //显示加载圈
 				this.$http.post("/media/mediaFile/pagelist",para).then(result=>{
 					this.total = result.data.data.total;
 					this.tableData = result.data.data.rows;
 					this.listLoading = false;  //关闭加载圈
+				}).catch(error => {
+					this.listLoading = false;
+					this.$message({
+						message: '查询失败',
+						type: 'error'
+					});
 				});
 			},
 			selsChange(sels){

@@ -1,7 +1,9 @@
 package cn.lzs.ymcc.service;
 
 import cn.lzs.ymcc.domain.MediaFile;
+import cn.lzs.ymcc.query.MediaFileQuery;
 import cn.lzs.ymcc.result.JSONResult;
+import com.baomidou.mybatisplus.plugins.Page;
 import com.baomidou.mybatisplus.service.IService;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -47,4 +49,12 @@ public interface IMediaFileService extends IService<MediaFile> {
 
 
     JSONResult getForUrl(Long mediaId);
+
+    /**
+     * 带条件分页查询媒体文件
+     * @param page 分页对象
+     * @param query 查询条件
+     * @return 分页结果
+     */
+    Page<MediaFile> selectPageWithCondition(Page<MediaFile> page, MediaFileQuery query);
 }

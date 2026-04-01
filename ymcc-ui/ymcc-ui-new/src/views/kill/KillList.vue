@@ -52,12 +52,12 @@
         <div class="course-grid" v-loading="loading">
           <div class="course-card" v-for="course in filteredCourses" :key="course.id" @click="goDetail(course)">
             <div class="card-img">
-              <img v-if="course.coursePic" :src="course.coursePic" :alt="course.courseName">
-              <div v-else class="img-placeholder">{{ (course.courseName || '课').charAt(0) }}</div>
-              <div class="status-tag" :class="getStatusClass(course)">
-                {{ course.killStatusName }}
-              </div>
-            </div>
+               <img v-if="course.coursePic" :src="course.coursePic" :alt="course.courseName" @error="handleImgError">
+               <img v-else src="../../assets/java.jpeg" :alt="course.courseName">
+               <div class="status-tag" :class="getStatusClass(course)">
+                 {{ course.killStatusName }}
+               </div>
+             </div>
             <div class="card-body">
               <h3 class="title">{{ course.courseName }}</h3>
               <p class="teacher" v-if="course.teacherNames">
@@ -101,7 +101,7 @@
 
     <!-- 底部 -->
     <div class="footer">
-      <p>&copy; 2024 云课教育 版权所有</p>
+      <p>&copy; 2026 云课教育 版权所有</p>
     </div>
   </div>
 </template>
@@ -191,6 +191,9 @@ export default {
         return
       }
       this.goDetail(course)
+    },
+    handleImgError(e) {
+      e.target.src = require('../../assets/java.jpeg')
     },
     logout() {
       localStorage.clear()

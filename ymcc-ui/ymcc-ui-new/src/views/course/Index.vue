@@ -111,7 +111,7 @@
 
     <!-- 底部 -->
     <div class="footer">
-      <p>&copy; 2024 云课教育 版权所有</p>
+      <p>&copy; 2026 云课教育 版权所有</p>
     </div>
   </div>
 </template>
@@ -177,7 +177,7 @@ export default {
               'linear-gradient(135deg, #d299c2 0%, #fef9d7 100%)',
               'linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%)'
             ]
-            this.hotCourses = courses.map((c, i) => ({
+            let hotCourses = courses.map((c, i) => ({
               ...c,
               title: c.name || c.title || '课程',
               description: c.description || '',
@@ -186,10 +186,26 @@ export default {
               studentCount: c.studentCount || 0,
               bg: colors[i % colors.length]
             }))
+            
+            // 确保至少显示4个课程
+            const minCourses = 4
+            if (hotCourses.length < minCourses) {
+              const defaultCourses = [
+                { id: 1, title: 'Vue.js 实战课程', description: '从入门到精通', price: 99, studentCount: 1234, image: '', bg: colors[0] },
+                { id: 2, title: 'React 进阶课程', description: '深入理解 React 原理', price: 129, studentCount: 2345, image: '', bg: colors[1] },
+                { id: 3, title: 'Node.js 全栈开发', description: '打造完整全栈项目', price: 199, studentCount: 3456, image: '', bg: colors[2] },
+                { id: 4, title: 'Python 入门到实战', description: '零基础学习 Python', price: 0, studentCount: 4567, image: '', bg: colors[3] }
+              ]
+              // 补充默认课程
+              const needCount = minCourses - hotCourses.length
+              hotCourses = [...hotCourses, ...defaultCourses.slice(0, needCount)]
+            }
+            
+            this.hotCourses = hotCourses
           }
         })
         .catch(() => {
-          // 使用模拟数据
+          // 使用模拟数据（默认4个课程）
           this.hotCourses = [
             { id: 1, title: 'Vue.js 实战课程', description: '从入门到精通', price: 99, studentCount: 1234, image: '', bg: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
             { id: 2, title: 'React 进阶课程', description: '深入理解 React 原理', price: 129, studentCount: 2345, image: '', bg: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' },
@@ -207,7 +223,13 @@ export default {
         .then(res => {
           if (res.data.success) {
             // 只取前4个展示在首页
-            this.killCourses = (res.data.data || []).slice(0, 4)
+            const courses = (res.data.data || []).slice(0, 4)
+            // 兼容后端字段名
+            courses.forEach(item => {
+              item.isKilling = item.isKilling !== undefined ? item.isKilling : item.killing
+              item.isUnbegin = item.isUnbegin !== undefined ? item.isUnbegin : item.unbegin
+            })
+            this.killCourses = courses
           }
         })
         .catch(() => {

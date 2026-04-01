@@ -8,6 +8,7 @@ import cn.lzs.ymcc.constant.RedisConstants;
 import cn.lzs.ymcc.constant.RocketMQConstants;
 import cn.lzs.ymcc.domain.*;
 import cn.lzs.ymcc.dto.*;
+import com.alibaba.fastjson.JSONArray;
 import cn.lzs.ymcc.mapper.CourseOrderItemMapper;
 import cn.lzs.ymcc.mapper.CourseOrderMapper;
 import cn.lzs.ymcc.result.JSONResult;
@@ -583,13 +584,23 @@ public class CourseOrderServiceImpl extends ServiceImpl<CourseOrderMapper, Cours
         if (!courseInfoResult.isSuccess() || courseInfoResult.getData() == null) {
             throw new GlobalBusinessException("课程信息不存在");
         }
-        String courseJson = JSONObject.toJSONString(courseInfoResult.getData());
-        List<CourseDTO> courseDtoList = JSON.parseArray(courseJson, CourseDTO.class);
-        if (courseDtoList == null || courseDtoList.isEmpty()) {
+
+        // 将 data 转为 JSONObject
+        JSONObject dataJson = JSONObject.parseObject(JSONObject.toJSONString(courseInfoResult.getData()));
+        log.info("课程服务返回的数据：{}", dataJson);
+
+        // 获取 courses 数组
+        JSONArray coursesArray = dataJson.getJSONArray("courses");
+        if (coursesArray == null || coursesArray.isEmpty()) {
             throw new GlobalBusinessException("课程信息不存在");
         }
-        CourseDTO courseDTO = courseDtoList.get(0);
-        Course course = courseDTO.getCourse();
+
+        // 解析第一个课程的 CourseDTO
+        JSONObject firstCourse = coursesArray.getJSONObject(0);
+        Course course = firstCourse.toJavaObject(Course.class);
+        if (course == null) {
+            throw new GlobalBusinessException("课程信息解析失败");
+        }
 
         // 3. 创建主订单
         Date now = new Date();

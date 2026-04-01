@@ -25,7 +25,13 @@
 			<el-table-column prop="coursePic" label="封面"  sortable width="100">
 				<template scope="scope">
 					<el-image style="width: 60px;height: 40px"
-							:src="scope.row.coursePic"></el-image>
+							:src="scope.row.coursePic || defaultCover"
+							:preview-src-list="[scope.row.coursePic]"
+							fit="cover">
+						<div slot="error" class="image-slot">
+							<img :src="defaultCover" style="width: 60px; height: 40px; object-fit: cover;">
+						</div>
+					</el-image>
 				</template>
 			</el-table-column>
 			<el-table-column prop="courseName" label="课程名"  sortable>
@@ -80,9 +86,11 @@
 
 <script>
 	import util from '../../common/js/util'
+	import defaultCover from '@/assets/java.jpeg'
 	export default {
 		data() {
 			return {
+				defaultCover: defaultCover,
 				//start 表格相关========================================================================================
 				filters: {
 					name: ''
@@ -261,5 +269,14 @@
 </script>
 
 <style scoped>
-
+.image-slot {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	width: 60px;
+	height: 40px;
+	background: #f5f7fa;
+	color: #909399;
+	font-size: 20px;
+}
 </style>

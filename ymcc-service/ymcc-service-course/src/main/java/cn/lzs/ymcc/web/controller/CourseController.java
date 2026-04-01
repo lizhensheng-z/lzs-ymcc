@@ -14,7 +14,9 @@ import com.baomidou.mybatisplus.plugins.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/course")
@@ -67,6 +69,22 @@ public class CourseController {
     @GetMapping("/info/{courseIds}")
     public JSONResult getCourseInfo(@PathVariable("courseIds")List<Long> courseIds){
         CourseInfoDTO courseInfoDTO = courseService.getCourseInfoByCourseIds(courseIds);
+        return JSONResult.success(courseInfoDTO);
+    }
+
+    /**
+     * RPC接口：根据课程id获取课程信息（供订单服务调用）
+     * @param courseIds 课程ID，多个用逗号分隔
+     * @return
+     */
+    @GetMapping("/rpc/info/{courseIds}")
+    public JSONResult info(@PathVariable("courseIds") String courseIds){
+        // 将字符串转换为List<Long>
+        List<Long> courseIdList = Arrays.stream(courseIds.split(","))
+                .map(String::trim)
+                .map(Long::parseLong)
+                .collect(Collectors.toList());
+        CourseInfoDTO courseInfoDTO = courseService.getCourseInfoByCourseIds(courseIdList);
         return JSONResult.success(courseInfoDTO);
     }
 

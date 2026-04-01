@@ -4,12 +4,14 @@ import cn.lzs.ymcc.Exception.GlobalBusinessException;
 import cn.lzs.ymcc.domain.MediaFile;
 import cn.lzs.ymcc.mapper.MediaFileMapper;
 import cn.lzs.ymcc.producer.MediaProducer;
+import cn.lzs.ymcc.query.MediaFileQuery;
 import cn.lzs.ymcc.result.JSONResult;
 import cn.lzs.ymcc.service.IMediaFileService;
 import cn.lzs.ymcc.util.HlsVideoUtil;
 import cn.lzs.ymcc.util.Mp4VideoUtil;
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.baomidou.mybatisplus.mapper.Wrapper;
+import com.baomidou.mybatisplus.plugins.Page;
 import com.baomidou.mybatisplus.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -88,6 +90,62 @@ public class MediaFileServiceImpl extends ServiceImpl<MediaFileMapper, MediaFile
         List<MediaFile> mediaFiles = mediaFileMapper.selectList(new EntityWrapper<MediaFile>().eq("course_id", courseId));
 //         List<MediaFile> mediaFiles = mediaFileMapper.getMediaFilesByCourseId(courseId);
          return mediaFiles;
+    }
+
+    /**
+     * 带条件分页查询媒体文件
+     * @param page 分页对象
+     * @param query 查询条件（支持视频名称、课程 ID、章节 ID、文件状态等）
+     * @return 分页结果
+     */
+    @Override
+    public Page<MediaFile> selectPageWithCondition(Page<MediaFile> page, MediaFileQuery query) {
+        // 构建查询条件
+        EntityWrapper<MediaFile> wrapper = new EntityWrapper<>();
+
+        // 视频名称模糊查询（支持 name 和 keyword 字段）
+        if (query.getName() != null && !query.getName().trim().isEmpty()) {
+            wrapper.like("name", query.getName().trim());
+        } else if (query.getKeyword() != null && !query.getKeyword().trim().isEmpty()) {
+            // 兼容 keyword 字段，同时查询视频名称和原始文件名
+            wrapper.and("(name LIKE CONCAT('%', #{0}, '%') OR file_original_name LIKE CONCAT('%', #{0}, '%'))",
+                       query.getKeyword().trim());
+        }
+
+        // 课程 ID 精确查询
+        if (query.getCourseId() != null) {
+            wrapper.eq("course_id", query.getCourseId());
+        }
+
+        // 章节 ID 精确查询
+        if (query.getChapterId() != null) {
+            wrapper.eq("chapter_id", query.getChapterId());
+        }
+
+        // 文件状态查询
+        if (query.getFileStatus() != null) {
+            wrapper.eq("file_status", query.getFileStatus());
+        }
+
+        // 排序
+        if (query.getSortField() != null && !query.getSortField().trim().isEmpty()) {
+            String sortField = query.getSortField().trim();
+            String sortType = query.getSortType() != null ? query.getSortType().trim() : "desc";
+            if ("asc".equalsIgnoreCase(sortType)) {
+                wrapper.orderBy(sortField, true);
+            } else {
+                wrapper.orderBy(sortField, false);
+            }
+        } else {
+            // 默认按上传时间倒序
+            wrapper.orderBy("upload_time", false);
+        }
+
+        // 执行分页查询
+        List<MediaFile> mediaFiles = mediaFileMapper.selectPage(page, wrapper);
+        page.setRecords(mediaFiles);
+        page.setTotal(mediaFiles.size());
+        return page;
     }
 
     /**

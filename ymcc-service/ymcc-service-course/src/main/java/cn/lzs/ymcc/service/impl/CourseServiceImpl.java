@@ -84,7 +84,7 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         course.setLoginId(Objects.requireNonNull(LoginContext.getLogin()).getId());
         course.setLoginUserName(LoginContext.getLogin().getUsername());
         //查询讲师姓名然后存入teachersName字段
-        ArrayList<Long> teacherIds = courseDTO.getTeacherIds();
+        ArrayList<Long> teacherIds = (ArrayList<Long>) courseDTO.getTeacherIds();
         List<Teacher> teachers = teacherMapper.selectBatchIds(teacherIds);
         StringBuffer teachersName = new StringBuffer();
         for (Teacher teacher : teachers) {

@@ -144,11 +144,12 @@ public class MediaFileController {
 
     /**
     * 带条件分页查询数据
+    * 支持按视频名称、课程 ID、章节 ID、文件状态等条件查询
     */
     @RequestMapping(value = "/pagelist",method = RequestMethod.POST)
     public JSONResult page(@RequestBody MediaFileQuery query){
         Page<MediaFile> page = new Page<MediaFile>(query.getPage(),query.getRows());
-        page = mediaFileService.selectPage(page);
+        page = mediaFileService.selectPageWithCondition(page, query);
         return JSONResult.success(new PageList<MediaFile>(page.getTotal(),page.getRecords()));
     }
 

@@ -64,8 +64,8 @@
       <div class="course-grid">
         <div class="course-card" v-for="course in courses" :key="course.id" @click="goDetail(course.id)">
           <div class="course-img" :style="course.image ? {} : { background: course.bg }">
-            <img v-if="course.image" :src="course.image" :alt="course.title">
-            <div v-else class="course-placeholder">{{ (course.title || '课').charAt(0) }}</div>
+            <img v-if="course.image" :src="course.image" :alt="course.title" @error="handleImgError">
+            <img v-else src="../../assets/java.jpeg" :alt="course.title">
           </div>
           <div class="course-info">
             <h3>{{ course.title }}</h3>
@@ -210,6 +210,9 @@ export default {
           this.$message.error(res.data.message || '加入失败')
         }
       })
+    },
+    handleImgError(e) {
+      e.target.src = require('../../assets/java.jpeg')
     }
   }
 }
