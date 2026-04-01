@@ -87,7 +87,12 @@ public class MediaFileServiceImpl extends ServiceImpl<MediaFileMapper, MediaFile
         if(courseId == null){
             throw new GlobalBusinessException("参数异常");
         }
-        List<MediaFile> mediaFiles = mediaFileMapper.selectList(new EntityWrapper<MediaFile>().eq("course_id", courseId));
+        // 只查询处理成功的文件 (fileStatus=2)
+        List<MediaFile> mediaFiles = mediaFileMapper.selectList(
+            new EntityWrapper<MediaFile>()
+                .eq("course_id", courseId)
+                .eq("file_status", 2)
+        );
 //         List<MediaFile> mediaFiles = mediaFileMapper.getMediaFilesByCourseId(courseId);
          return mediaFiles;
     }
@@ -230,8 +235,8 @@ public class MediaFileServiceImpl extends ServiceImpl<MediaFileMapper, MediaFile
         mediaFile.setCourseName(courseName);
         mediaFile.setChapterName(chapterName);
         mediaFile.setFileUrl(srsPalyPath+mediaFile.getFileId()+".m3u8");
-        //状态为上传成功
-        mediaFile.setFileStatus(1);
+        //状态为处理成功（文件已完成转码和推流）
+        mediaFile.setFileStatus(2);
 
         //根据最新的number生成number
         Wrapper<MediaFile> wrapper = new EntityWrapper<>();
