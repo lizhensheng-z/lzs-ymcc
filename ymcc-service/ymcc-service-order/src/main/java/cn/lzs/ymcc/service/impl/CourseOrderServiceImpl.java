@@ -544,6 +544,7 @@ public class CourseOrderServiceImpl extends ServiceImpl<CourseOrderMapper, Cours
                 boolean isDelayOk = sendResult.getSendStatus() == SendStatus.SEND_OK;
                 if (!isDelayOk){ // 判断发送延迟信息是否成功
                     // 兜底: 1.重试发送  2.记录数据库日志  3.发各种通知短信到代码负责人,运维....人工介入处理
+                    log.error("发送延迟消息失败");
                 }
             } catch (Exception e) {
                 e.printStackTrace();

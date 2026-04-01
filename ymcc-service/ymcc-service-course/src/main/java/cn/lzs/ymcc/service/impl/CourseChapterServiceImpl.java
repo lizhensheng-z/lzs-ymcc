@@ -51,14 +51,26 @@ public class CourseChapterServiceImpl extends ServiceImpl<CourseChapterMapper, C
         if (courseChapters == null) {
             return Collections.emptyList();
         }
-        //远程调用，查出所有视频
-        JSONResult mediaFilesByCourseId = mediaFileApi.getMediaFilesByCourseId(courseId);
-        Object data = mediaFilesByCourseId.getData();
-        String jsonString = JSONObject.toJSONString(data);
-        List<MediaFile> mediaFiles = JSONObject.parseArray(jsonString, MediaFile.class);
+        
+        //远程调用，查出所有视频 - 添加异常处理防止Media服务超时影响主流程
+        List<MediaFile> mediaFiles = null;
+        try {
+            JSONResult mediaFilesByCourseId = mediaFileApi.getMediaFilesByCourseId(courseId);
+            Object data = mediaFilesByCourseId.getData();
+            String jsonString = JSONObject.toJSONString(data);
+            mediaFiles = JSONObject.parseArray(jsonString, MediaFile.class);
+        } catch (feign.RetryableException e) {
+            // Media服务超时，记录日志，返回章节但不包含视频
+            System.err.println("Media服务调用超时，courseId=" + courseId + ", 错误: " + e.getMessage());
+        } catch (Exception e) {
+            // 其他异常也捕获，保证主流程不受影响
+            System.err.println("Media服务调用异常，courseId=" + courseId + ", 错误: " + e.getMessage());
+        }
+        
         //将章节和视频进行配对
+        final List<MediaFile> finalMediaFiles = mediaFiles;
         courseChapters.forEach(chapter -> {
-            List<MediaFile> files = Optional.ofNullable(mediaFiles)
+            List<MediaFile> files = Optional.ofNullable(finalMediaFiles)
                     .orElse(Collections.emptyList())
                     .stream()
                     .filter(Objects::nonNull)
