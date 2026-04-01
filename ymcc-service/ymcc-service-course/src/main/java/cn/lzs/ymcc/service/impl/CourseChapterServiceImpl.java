@@ -69,6 +69,21 @@ public class CourseChapterServiceImpl extends ServiceImpl<CourseChapterMapper, C
         
         //将章节和视频进行配对
         final List<MediaFile> finalMediaFiles = mediaFiles;
+        
+        // 调试日志：打印章节和视频的ID对比
+        if (finalMediaFiles != null && !finalMediaFiles.isEmpty()) {
+            System.out.println("=== 调试信息：章节与视频配对 ===");
+            System.out.println("章节数量: " + courseChapters.size());
+            for (CourseChapter chapter : courseChapters) {
+                System.out.println("章节ID: " + chapter.getId() + " (类型: " + chapter.getId().getClass().getName() + ")");
+            }
+            System.out.println("视频数量: " + finalMediaFiles.size());
+            for (MediaFile file : finalMediaFiles) {
+                System.out.println("视频 chapterId: " + file.getChapterId() + " (类型: " + 
+                    (file.getChapterId() != null ? file.getChapterId().getClass().getName() : "null") + ")");
+            }
+        }
+        
         courseChapters.forEach(chapter -> {
             List<MediaFile> files = Optional.ofNullable(finalMediaFiles)
                     .orElse(Collections.emptyList())
@@ -76,6 +91,7 @@ public class CourseChapterServiceImpl extends ServiceImpl<CourseChapterMapper, C
                     .filter(Objects::nonNull)
                     .filter(file -> Objects.equals(file.getChapterId(), chapter.getId()))
                     .collect(Collectors.toList());
+            System.out.println("章节 " + chapter.getId() + " 匹配到 " + files.size() + " 个视频");
             chapter.setMediaFiles(files);
         });
 

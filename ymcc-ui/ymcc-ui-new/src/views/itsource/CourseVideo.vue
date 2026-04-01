@@ -165,10 +165,17 @@
 				this.addVideoFormVisible = false;
 			},
 			addVideoHandler(chapterRow){
-				this.addVideoForm.chapterId = chapterRow.id;
-				this.addVideoForm.chapterName = chapterRow.name;
-				this.addVideoForm.courseId = chapterRow.courseId;
-				this.addVideoForm.courseName = chapterRow.courseName;
+				// 重置表单
+				this.addVideoForm = {
+					chapterId:"",
+					chapterName:'',
+					courseId:'',
+					number:'',
+					videoUrl:'',
+					name:'',
+					courseName:''
+				};
+				this.courseChapters = [];
 				this.addVideoFormVisible = true;
 			},
 			//加载课程==============================
