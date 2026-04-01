@@ -29,7 +29,6 @@
           <div v-if="currentVideo" class="video-player">
             <video
               ref="videoPlayer"
-              :src="currentVideoUrl"
               controls
               controlsList="nodownload"
               @ended="onVideoEnded"
@@ -147,7 +146,7 @@ export default {
     },
     initVideoPlayer(videoUrl) {
       const video = this.$refs.videoPlayer
-      if (!video) return
+      if (!video || !videoUrl) return
 
       // 销毁之前的 HLS 实例
       if (this.hls) {
@@ -156,23 +155,57 @@ export default {
       }
 
       // 判断是否是 HLS (m3u8) 格式
-      if (videoUrl.indexOf('.m3u8') > -1) {
+      if (videoUrl.indexOf('.m3u8') > -1 || videoUrl.includes('m3u8')) {
         if (Hls.isSupported()) {
-          // 浏览器支持 HLS
-          const hls = new Hls()
+          // 浏览器支持 HLS.js
+          const hls = new Hls({
+            enableWorker: true,
+            lowLatencyMode: true,
+            backBufferLength: 90
+          })
           hls.loadSource(videoUrl)
           hls.attachMedia(video)
+
           hls.on(Hls.Events.MANIFEST_PARSED, () => {
-            video.play().catch(() => {})
+            console.log('HLS manifest parsed, video can play')
+            video.play().catch(e => {
+              console.log('自动播放被阻止，请用户手动点击播放')
+            })
           })
+
+          hls.on(Hls.Events.ERROR, (event, data) => {
+            console.error('HLS error:', data)
+            if (data.fatal) {
+              switch (data.type) {
+                case Hls.ErrorTypes.NETWORK_ERROR:
+                  console.log('网络错误，尝试恢复...')
+                  hls.startLoad()
+                  break
+                case Hls.ErrorTypes.MEDIA_ERROR:
+                  console.log('媒体错误，尝试恢复...')
+                  hls.recoverMediaError()
+                  break
+                default:
+                  console.log('无法恢复的错误，销毁HLS实例')
+                  hls.destroy()
+                  break
+              }
+            }
+          })
+
           this.hls = hls
         } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
           // Safari 原生支持 HLS
           video.src = videoUrl
+          video.load()
+        } else {
+          console.warn('浏览器不支持HLS播放')
+          this.$message.warning('您的浏览器不支持HLS视频播放')
         }
       } else {
         // 普通视频直接设置 src
         video.src = videoUrl
+        video.load()
       }
     },
     loadCourseDetail() {
