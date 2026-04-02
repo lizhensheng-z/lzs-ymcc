@@ -1,3 +1,67 @@
+本时序图展示了基于 RocketMQ 事务消息 实现的订单-支付分布式事务解决方案。通过 Half Message + 本地事务执行 + 事务状态回查 机制，彻底解决传统 先落库后发消息 或 先发消息后落库 带来的数据不一致问题，保障订单创建与支付单生成的 最终一致性。
+
+🔹 二、 标准流程拆解（①~⑪）
+← 可左右滑动查看更多内容 →
+全屏
+复制
+步骤	参与方	动作说明	技术意义
+①	用户 → Order	提交下单请求	业务入口，携带商品、用户、金额等信息
+②	Order → Listener	发送 Half 消息	RocketMQ 将消息标记为 Half 状态，对消费者不可见，仅持久化
+③	Listener → Order	ACK 确认	MQ 返回暂存成功，Order 服务获知可安全执行本地事务
+④	Order → MySQL	执行本地事务	在同一个 DB 事务中插入 t_course_order 与 t_course_order_item，保障订单数据原子性
+⑤	Order → Listener	Commit/Rollback	本地事务成功后提交，失败则回滚。Listener 将结果上报 MQ
+⑥	Listener → MQ	投递正式消息	MQ 将 Half 消息转为 Commit 状态，对 Pay 服务可见并触发消费
+⑦	Pay → MySQL	保存支付单	Pay 服务消费消息，创建 t_pay_order 记录，准备唤起支付网关
+⑧	Pay → MQ	ACK 确认	支付单落库成功后返回 ACK，MQ 标记消息已消费，防止重复投递
+⑨	MQ → Pay	延迟消息	投递 10 秒后触发的延迟消息，用于订单超时未支付时的自动取消或状态核对
+⑩	Order → 用户	返回订单号	异步流程不影响同步响应，用户快速获知下单结果
+⑪	MQ → Listener	超时回查	若 MQ 未收到 Commit/Rollback（如 Order 服务宕机），定时触发 checkLocalTransaction 查询 DB 订单状态，补偿事务状态
+🔹 三、 关键技术机制说明
+← 可左右滑动查看更多内容 →
+全屏
+复制
+机制	原理	解决的问题
+Half Message（半消息）	消息先写入 MQ 的 RMQ_SYS_TRANS_HALF_TOPIC，消费者不可见	避免“消息已发但本地事务失败”导致的数据不一致
+本地事务绑定	Order 服务在同一个 Spring @Transactional 中完成 DB 写入	保证订单主表与明细表的强一致性，失败则整体回滚
+事务状态回查	MQ 定期扫描未决的 Half 消息，调用 checkLocalTransaction 查 DB	解决网络抖动、服务重启导致的 Commit/Rollback 丢失问题
+延迟消息兜底	消费成功后投递 10s 延迟消息，触发超时检查或状态同步	防止支付单创建后用户未支付导致的库存/订单状态悬挂
+🔹 四、 架构设计价值
+最终一致性保障：通过 MQ 事务机制 + 回查补偿，订单与支付单状态最终 100% 对齐，无需引入 Seata/XA 等重量级分布式事务框架。
+高性能与高可用：同步链路仅执行 DB 事务，消息投递异步化；MQ 集群支持多副本与持久化，单点故障不影响核心交易。
+天然防重与幂等：Pay 服务通过 order_no 唯一索引 + 消费端幂等表，结合 MQ 的 ACK 机制，彻底杜绝重复创建支付单。
+可观测性强：Half 消息状态、回查次数、延迟消息堆积均可通过 RocketMQ Dashboard 实时监控，便于快速定位异常。
+
+![img_7.png](img_7.png)
+🔹 一、 架构定位
+本架构采用 RocketMQ 延迟消息 + 广播消费模式 实现订单超时自动取消。通过消息中间件替代传统定时任务轮询数据库的方案，彻底解决高并发场景下的 DB 性能瓶颈、状态不一致与扩展性差等问题，保障订单、支付、库存三方状态的最终一致性。
+
+🔹 二、 核心流程拆解
+← 可左右滑动查看更多内容 →
+全屏
+复制
+阶段	参与方	动作说明	技术意义
+1. 消息投递	Order 服务 → RocketMQ	订单创建成功后，立即发送延迟消息（如 delayLevel=16 对应 30 分钟）至 SCHEDULE_TOPIC	异步化超时逻辑，不阻塞主交易链路，响应时间 <50ms
+2. 定时调度	RocketMQ Broker	内部定时任务扫描 SCHEDULE_TOPIC，到期后将消息路由至业务主题 mq_topic_courseorder_cancel_delay	精准触发，避免应用层 Cron 任务漂移或单点故障
+3. 广播分发	RocketMQ → 消费者组	消息以 Broadcasting 模式 同时投递至 service-order-delay-consumer 与 service-pay-delay-consumer	各服务独立消费、互不干扰，实现状态同步解耦
+4. 支付侧处理	Pay 服务	消费消息 → 校验订单支付状态 → 若未支付则更新支付单为“已取消” → 调用支付宝 alipay.trade.close 接口	保障资金安全，防止用户超时后误支付或重复支付
+5. 订单侧处理	Order 服务	消费消息 → 校验订单状态 → 若未支付则更新为“超时取消” → 释放库存/课程权益	保障资源可用性，避免库存悬挂
+   🔹 三、 关键技术机制
+   ← 可左右滑动查看更多内容 →
+   全屏
+   复制
+   机制	实现方案	解决的问题
+   延迟消息精准触发	利用 RocketMQ 内置 SCHEDULE_TOPIC 与定时扫描线程	替代 DB 轮询，CPU/IO 开销降低 90%+，触发误差 <1s
+   广播模式 (Broadcasting)	消费者配置 MessageModel.BROADCASTING	确保同一超时事件被订单、支付、营销等多个服务独立感知，无需硬编码服务间调用
+   状态幂等校验	消费前 SELECT status FROM t_order/t_pay WHERE order_no=?	防止消息重复投递导致重复取消或误关已支付订单
+   外部接口补偿	支付宝关闭接口失败 → 本地重试队列 + 定时对账任务	应对网络抖动或第三方服务不可用，保障最终一致性
+   消息持久化与重试	RocketMQ 双写 CommitLog + 消费失败指数退避重试	消息不丢失，服务重启或宕机后自动恢复消费进度
+   🔹 四、 架构设计价值
+   高性能：零 DB 轮询，超时逻辑完全由 MQ 异步驱动，订单创建 TPS 提升 3~5 倍。
+   高可靠：MQ 消息持久化 + 广播重试 + 状态校验，确保超时取消 100% 执行且不误伤正常订单。
+   易扩展：新增业务方（如优惠券服务、积分服务）只需订阅同一主题，无需修改订单/支付核心代码。
+   可观测性强：延迟消息堆积量、消费延迟、取消成功率均可通过 RocketMQ Dashboard 与 Prometheus 实时监控。
+
+
 # RocketMQ 延迟消息在订单超时取消中的应用分析
 
 ## 一、应用场景

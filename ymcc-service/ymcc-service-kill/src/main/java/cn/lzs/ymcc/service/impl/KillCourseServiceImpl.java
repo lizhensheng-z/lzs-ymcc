@@ -86,40 +86,20 @@ public class KillCourseServiceImpl extends ServiceImpl<KillCourseMapper, KillCou
     }
 
     /**
-     * 从redis中查询所有秒杀商品
+     * 查询所有已发布的秒杀课程
+     * 直接从数据库查询已发布的秒杀课程，不再依赖Redis
      *
-     * @return 通过redis先拿到所有秒杀活动的key, 在循环去拿到秒杀活动key下面对应的商品
+     * @return 已发布的秒杀课程列表
      */
     @Override
     public List<KillCourse> onlineAll() {
-        // 从redis中查询所有秒杀活动, 拿到所有以activity: 开头的Key
-        Set<Object> keys = redisTemplate.keys("activity:*");
+        // 直接从数据库查询已发布的秒杀课程（publishStatus=1）
+        Wrapper<KillCourse> wrapper = new EntityWrapper<>();
+        wrapper.eq("publish_status", KillActivity.ACTIVITY_PUBLISH);
+        List<KillCourse> killCourses = selectList(wrapper);
 
-        // 如果没有数据，返回空列表
-        if (keys == null || keys.isEmpty()) {
+        if (killCourses == null) {
             return new ArrayList<>();
-        }
-
-        // 要给前端返回一个List<KillCourse>数组, 创建一个空的List,往里面追加redis中的商品
-        List<KillCourse> killCourses = new ArrayList<>();
-
-        // 遍历从redis中获取到的秒杀活动
-        for (Object key : keys) {
-            // 通过遍历到的每一个秒杀活动,key去redis中获取活动的value (秒杀活动,商品id,商品库存)
-            List<Object> values = redisTemplate.opsForHash().values(key);
-            if (values != null && !values.isEmpty()) {
-                for (Object value : values) {
-                    // 从Redis获取的可能是旧数据，从数据库重新查询获取最新状态
-                    if (value instanceof KillCourse) {
-                        KillCourse redisCourse = (KillCourse) value;
-                        // 从数据库查询最新数据，确保状态实时计算
-                        KillCourse dbCourse = selectById(redisCourse.getId());
-                        if (dbCourse != null) {
-                            killCourses.add(dbCourse);
-                        }
-                    }
-                }
-            }
         }
         return killCourses;
     }
