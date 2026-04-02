@@ -59,4 +59,11 @@ public interface IKillCourseService extends IService<KillCourse> {
      */
     String payKillOrder(String orderNo, Integer payType);
 
+    /**
+     * 扣减数据库中的秒杀库存
+     * @param killCourseId 秒杀课程ID
+     * @param count 扣减数量
+     */
+    void decrementKillCount(Long killCourseId, Integer count);
+
 }

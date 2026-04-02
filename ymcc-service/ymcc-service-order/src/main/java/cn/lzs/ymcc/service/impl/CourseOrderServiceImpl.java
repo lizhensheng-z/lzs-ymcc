@@ -536,7 +536,7 @@ public class CourseOrderServiceImpl extends ServiceImpl<CourseOrderMapper, Cours
                 // 支付超时取消,延迟消息
                 // 参数一: 发送消息组名   参数二: 消息体 (订单号)   参数三: 超时时间(毫秒)  参数四: 延迟等级
                 SendResult sendResult = rocketMQTemplate.syncSend(
-                        "topic-paytimeout:tag-paytimeout",
+                        RocketMQConstants.MQ_TOPIC_COURSEORDER_CANCEL_DELAY + ":" + RocketMQConstants.MQ_TAGS_COURSEORDER_CANCEL_DELAY,
                         MessageBuilder.withPayload(order.getOrderNo()).build(),
                         3000,
                         5

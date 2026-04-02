@@ -22,7 +22,7 @@
             <if test="updateTime != null">update_time = #{updateTime},</if>
             <if test="statusOrder != null">status_order = #{statusOrder},</if>
         </set>
-        where order_no = #{orderNo}
+        where order_no = #{orderNo} AND status_order = 0
     </update>
 
 </mapper>

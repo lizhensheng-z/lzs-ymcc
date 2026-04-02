@@ -179,13 +179,14 @@ public class KillCourseServiceImpl extends ServiceImpl<KillCourseMapper, KillCou
         //扣除成功: 生成预订单,存储redis
         String orderNo = CodeGenerateUtils.generateOrderSn(loginId); // 生成预订单号
         // 创建preOrderDto,设置需要的值
-        PreOrderDto preOrderDto = new PreOrderDto(
-                orderNo,
-                killCourse.getKillPrice(),
-                1,
-                loginId,
-                killCourse.getCourseId()
-        );
+        PreOrderDto preOrderDto = new PreOrderDto();
+        preOrderDto.setOrderNo(orderNo);
+        preOrderDto.setTotalAmount(killCourse.getKillPrice());
+        preOrderDto.setTotalCount(1);
+        preOrderDto.setUserId(loginId);
+        preOrderDto.setCourseId(killCourse.getCourseId());
+        preOrderDto.setKillCourseId(killCourse.getId()); // 保存秒杀商品id，用于扣减库存
+        preOrderDto.setActivityId(dto.getActivityId()); // 保存活动id
         // 生成预订单,存储redis
         redisTemplate.opsForValue().set(orderNo,preOrderDto);
         // 为了保证一个人只能购买一个课程一次,单独存入redis
@@ -231,10 +232,33 @@ public class KillCourseServiceImpl extends ServiceImpl<KillCourseMapper, KillCou
         // 3. 删除Redis中的预订单
         redisTemplate.delete(orderNo);
 
-        // 4. 删除重复购买标记（可选，如果想限制用户只能购买一次，可以保留）
+        // 4. 扣减数据库中的秒杀库存
+        if (preOrder.getKillCourseId() != null) {
+            decrementKillCount(preOrder.getKillCourseId(), 1);
+        }
+
+        // 5. 删除重复购买标记（可选，如果想限制用户只能购买一次，可以保留）
         // redisTemplate.delete(preOrder.getUserId() + ":" + preOrder.getCourseId());
 
         return orderNo;
+    }
+
+    /**
+     * 扣减数据库中的秒杀库存
+     * @param killCourseId 秒杀课程ID
+     * @param count 扣减数量
+     */
+    @Override
+    public void decrementKillCount(Long killCourseId, Integer count) {
+        KillCourse killCourse = selectById(killCourseId);
+        if (killCourse == null) {
+            throw new RuntimeException("秒杀课程不存在，ID: " + killCourseId);
+        }
+        if (killCourse.getKillCount() < count) {
+            throw new RuntimeException("秒杀库存不足，当前库存: " + killCourse.getKillCount());
+        }
+        killCourse.setKillCount(killCourse.getKillCount() - count);
+        updateById(killCourse);
     }
 
 }

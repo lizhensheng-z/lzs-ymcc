@@ -21,6 +21,10 @@ public class PreOrderDto {
 
     private Long courseId; // 秒杀课程id
 
+    private Long killCourseId; // 秒杀商品id（用于扣减库存）
+
+    private Long activityId; // 秒杀活动id
+
 
 
 
