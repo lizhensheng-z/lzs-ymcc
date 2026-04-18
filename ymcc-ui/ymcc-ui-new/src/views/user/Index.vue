@@ -22,9 +22,9 @@
       <!-- 左侧菜单 -->
       <div class="sidebar">
         <div class="user-card">
-          <div class="avatar">
-            <img :src="userInfo.headImg || 'https://via.placeholder.com/80'">
-          </div>
+           <div class="avatar">
+             <img :src="userInfo.headImg || defaultAvatar" @error="handleAvatarError">
+           </div>
           <div class="info">
             <h3>{{ userInfo.username }}</h3>
             <p>等级：{{ userInfo.levelName || 'VIP会员' }}</p>
@@ -68,9 +68,9 @@
         <!-- 用户信息卡片 -->
         <div class="user-header">
           <div class="user-info-box">
-            <div class="avatar">
-              <img :src="userInfo.headImg || 'https://via.placeholder.com/100'">
-            </div>
+             <div class="avatar">
+               <img :src="userInfo.headImg || defaultAvatar" @error="handleAvatarError">
+             </div>
             <div class="info">
               <h2>{{ userInfo.username }}</h2>
               <p>等级：{{ userInfo.levelName || 'VIP会员' }} | 成长值：{{ userInfo.growthValue || 0 }}</p>
@@ -168,12 +168,15 @@
 </template>
 
 <script>
+import defaultAvatarImg from '@/assets/java.jpeg'
+
 export default {
   name: 'UserIndex',
   data() {
     return {
       activeMenu: '/user',
       userInfo: {},
+      defaultAvatar: defaultAvatarImg,
       stats: {
         orderCount: 0,
         courseCount: 0,
@@ -222,6 +225,10 @@ export default {
     },
     loadRecentCourses() {
       this.recentCourses = []
+    },
+    handleAvatarError(e) {
+      // 头像加载失败时使用默认头像
+      e.target.src = this.defaultAvatar
     },
     logout() {
       localStorage.clear()

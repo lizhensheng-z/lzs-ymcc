@@ -27,8 +27,8 @@
       <div class="sidebar">
         <div class="user-card">
           <div class="avatar">
-            <img :src="userInfo.headImg || 'https://via.placeholder.com/80'">
-          </div>
+             <img :src="userInfo.headImg || defaultAvatar" @error="handleAvatarError">
+           </div>
           <div class="info">
             <h3>{{ userInfo.username }}</h3>
             <p>等级：{{ userInfo.levelName || 'VIP会员' }}</p>
@@ -148,6 +148,8 @@
 </template>
 
 <script>
+import defaultAvatarImg from '@/assets/java.jpeg'
+
 export default {
   name: 'UserOrders',
   data() {
@@ -155,6 +157,7 @@ export default {
       activeMenu: '/user/orders',
       isLoggedIn: false,
       userInfo: {},
+      defaultAvatar: defaultAvatarImg,
       loading: false,
       orders: [],
       total: 0,
@@ -256,6 +259,10 @@ export default {
     viewCourse(order) {
       // 跳转到课程学习页
       this.$router.push(`/user/course/learn/${order.courseId}`)
+    },
+    handleAvatarError(e) {
+      // 头像加载失败时使用默认头像
+      e.target.src = this.defaultAvatar
     },
     logout() {
       localStorage.clear()

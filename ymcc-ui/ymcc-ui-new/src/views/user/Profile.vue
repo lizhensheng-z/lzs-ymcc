@@ -60,19 +60,20 @@
           </el-form-item>
 
           <el-form-item label="头像">
-            <el-upload
-              class="avatar-uploader"
-              :action="uploadAction"
-              :show-file-list="false"
-              :on-success="handleAvatarSuccess"
-              :on-error="handleAvatarError"
-              :before-upload="beforeAvatarUpload"
-              :headers="uploadHeaders"
-              name="file">
-              <img v-if="profileForm.headImg" :src="profileForm.headImg" class="avatar">
-              <i v-else class="el-icon-plus avatar-uploader-icon"></i>
-            </el-upload>
-          </el-form-item>
+             <el-upload
+               class="avatar-uploader"
+               :action="uploadAction"
+               :show-file-list="false"
+               :on-success="handleAvatarSuccess"
+               :on-error="handleAvatarError"
+               :before-upload="beforeAvatarUpload"
+               :headers="uploadHeaders"
+               name="file">
+               <img v-if="profileForm.headImg" :src="profileForm.headImg" class="avatar" @error="handleImageError">
+               <img v-else :src="defaultAvatar" class="avatar">
+             </el-upload>
+             <div class="avatar-tip">点击头像可上传新头像</div>
+           </el-form-item>
 
           <el-form-item label="签名">
             <el-input
@@ -98,6 +99,8 @@
 </template>
 
 <script>
+import defaultAvatarImg from '@/assets/java.jpeg'
+
 export default {
   name: 'UserProfile',
   data() {
@@ -105,6 +108,7 @@ export default {
       isLoggedIn: false,
       userInfo: {},
       saving: false,
+      defaultAvatar: defaultAvatarImg,
       uploadAction: 'http://localhost:10010/ymcc/common/oss/uploadFile', // 后端上传接口地址（网关端口 10010）
       uploadHeaders: {},
       profileForm: {
@@ -211,18 +215,22 @@ export default {
       this.$message.error('头像上传失败，请重试')
     },
     beforeAvatarUpload(file) {
-      const isJPG = file.type === 'image/jpeg' || file.type === 'image/png'
-      const isLt2M = file.size / 1024 / 1024 < 2
+       const isJPG = file.type === 'image/jpeg' || file.type === 'image/png'
+       const isLt2M = file.size / 1024 / 1024 < 2
 
-      if (!isJPG) {
-        this.$message.error('上传头像图片只能是 JPG/PNG 格式!')
-      }
-      if (!isLt2M) {
-        this.$message.error('上传头像图片大小不能超过 2MB!')
-      }
-      return isJPG && isLt2M
-    },
-    logout() {
+       if (!isJPG) {
+         this.$message.error('上传头像图片只能是 JPG/PNG 格式!')
+       }
+       if (!isLt2M) {
+         this.$message.error('上传头像图片大小不能超过 2MB!')
+       }
+       return isJPG && isLt2M
+     },
+     handleImageError(e) {
+       // 头像加载失败时使用默认头像
+       e.target.src = this.defaultAvatar
+     },
+     logout() {
       localStorage.clear()
       this.$router.push('/')
     }
@@ -310,33 +318,40 @@ export default {
 }
 
 .avatar-uploader {
-  .el-upload {
-    border: 1px dashed #d9d9d9;
-    border-radius: 6px;
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
+   .el-upload {
+     border: 1px dashed #d9d9d9;
+     border-radius: 6px;
+     cursor: pointer;
+     position: relative;
+     overflow: hidden;
 
-    &:hover {
-      border-color: #409EFF;
-    }
-  }
+     &:hover {
+       border-color: #409EFF;
+     }
+   }
 
-  .avatar-uploader-icon {
-    font-size: 28px;
-    color: #8c939d;
-    width: 100px;
-    height: 100px;
-    line-height: 100px;
-    text-align: center;
-  }
+   .avatar-uploader-icon {
+     font-size: 28px;
+     color: #8c939d;
+     width: 100px;
+     height: 100px;
+     line-height: 100px;
+     text-align: center;
+   }
 
-  .avatar {
-    width: 100px;
-    height: 100px;
-    display: block;
-  }
-}
+   .avatar {
+     width: 100px;
+     height: 100px;
+     display: block;
+     object-fit: cover;
+   }
+
+   .avatar-tip {
+     font-size: 12px;
+     color: #999;
+     margin-top: 8px;
+   }
+ }
 
 .footer {
   background: #333;
