@@ -339,7 +339,16 @@ export default {
         return;
       }
 
-      // 验证必填字段
+      // 验证必填字段并添加调试日志
+      console.log('====== PartUpload 接收到的参数 ======');
+      console.log('courseId:', this.courseId, '类型:', typeof this.courseId);
+      console.log('chapterId:', this.chapterId, '类型:', typeof this.chapterId);
+      console.log('courseName:', this.courseName);
+      console.log('chapterName:', this.chapterName);
+      console.log('name:', this.name);
+      console.log('videoNumber:', this.videoNumber);
+      console.log('====================================');
+      
       if (!this.courseId || !this.chapterId) {
         this.$message.error('请先选择课程和章节');
         return;

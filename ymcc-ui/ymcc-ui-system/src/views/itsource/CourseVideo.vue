@@ -208,25 +208,51 @@
 			getCourseChapter(){
 				if(this.addVideoForm.courseId){
 					this.$http.get("/course/courseChapter/listByCourseId/"+this.addVideoForm.courseId).then(result=>{
-						this.courseChapters = result.data.data;
+						console.log('====== 加载章节列表 ======');
+						console.log('课程ID:', this.addVideoForm.courseId);
+						console.log('返回的章节列表:', result.data.data);
+						
+						// 确保所有章节的ID都转为字符串，避免精度丢失
+						this.courseChapters = result.data.data.map(chapter => {
+							console.log(`章节: ${chapter.name}, ID: ${chapter.id}, ID类型: ${typeof chapter.id}`);
+							return {
+								...chapter,
+								id: String(chapter.id),  // 转为字符串
+								courseId: String(chapter.courseId)
+							};
+						});
+						
+						console.log('处理后的章节列表:', this.courseChapters);
+						console.log('========================');
 					});
 				}
 			},
 			//选择章节
 			selectCourseChapter(courseChapterId){
+				// 添加更详细的调试日志
+				console.log('====== 选择章节调试信息 ======');
+				console.log('传入的章节ID:', courseChapterId, '类型:', typeof courseChapterId);
+				console.log('当前 addVideoForm.chapterId:', this.addVideoForm.chapterId);
+				console.log('章节列表:', this.courseChapters);
+				console.log('============================');
+				
 				if(courseChapterId){
-					// 添加调试日志
-					console.log('选择的章节ID:', courseChapterId, '类型:', typeof courseChapterId);
-					console.log('章节列表:', this.courseChapters);
-					
+					// el-select 的 v-model 会自动更新 addVideoForm.chapterId
+					// 我们需要再验证一次是否正确
 					for(let i = 0 ; i < this.courseChapters.length ; i++){
 						let courseChapter = this.courseChapters[i];
-						// 修复：统一转为字符串比较，避免类型不一致问题
+						// 统一转为字符串比较，避免类型不一致问题
 						if(String(courseChapter.id) === String(courseChapterId)){
+							console.log('✅ 匹配成功！');
+							console.log('章节名称:', courseChapter.name);
+							console.log('章节ID:', courseChapter.id);
+							
 							this.addVideoForm.chapterName = courseChapter.name;
-							// 确保 chapterId 赋值为正确的字符串
-							this.addVideoForm.chapterId = String(courseChapter.id);
-							console.log('匹配成功，章节名称:', courseChapter.name, '章节ID:', courseChapter.id);
+							// 强制更新 chapterId 确保一致性
+							this.$set(this.addVideoForm, 'chapterId', String(courseChapter.id));
+							
+							console.log('更新后 addVideoForm.chapterId:', this.addVideoForm.chapterId);
+							console.log('更新后 addVideoForm:', JSON.stringify(this.addVideoForm));
 							break;
 						}
 					}
