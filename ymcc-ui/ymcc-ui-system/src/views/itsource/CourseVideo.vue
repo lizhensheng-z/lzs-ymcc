@@ -63,7 +63,7 @@
 				</el-form-item>
 
 				<el-form-item label="章节名称" prop="name" >
-					<el-select @change="selectCourseChapter" v-model="addVideoForm.chapterId" placeholder="请选择" style="width: 680px">
+					<el-select v-model="selectedChapterId" @change="selectCourseChapter" placeholder="请选择" style="width: 680px">
 						<el-option
 								v-for="item in courseChapters"
 								:key="item.id"
@@ -136,6 +136,8 @@
 				page: 1,
 				listLoading: false,
 				sels:[],
+				// 选中的章节ID（用于el-select绑定）
+				selectedChapterId: '',
 				//添加章节视频的数据
 				addVideoForm:{
 					chapterId:"",
@@ -166,7 +168,8 @@
 				this.addVideoFormVisible = false;
 			},
 			addVideoHandler(chapterRow){
-				// 重置表单
+				// 重置表单和选中的章节ID
+				this.selectedChapterId = '';
 				this.addVideoForm = {
 					chapterId:"",
 					chapterName:'',
@@ -232,29 +235,34 @@
 				// 添加更详细的调试日志
 				console.log('====== 选择章节调试信息 ======');
 				console.log('传入的章节ID:', courseChapterId, '类型:', typeof courseChapterId);
-				console.log('当前 addVideoForm.chapterId:', this.addVideoForm.chapterId);
 				console.log('章节列表:', this.courseChapters);
 				console.log('============================');
 				
 				if(courseChapterId){
-					// el-select 的 v-model 会自动更新 addVideoForm.chapterId
-					// 我们需要再验证一次是否正确
+					// 查找选中的章节对象
+					let selectedChapter = null;
 					for(let i = 0 ; i < this.courseChapters.length ; i++){
 						let courseChapter = this.courseChapters[i];
-						// 统一转为字符串比较，避免类型不一致问题
+						// 统一转为字符串比较
 						if(String(courseChapter.id) === String(courseChapterId)){
-							console.log('✅ 匹配成功！');
-							console.log('章节名称:', courseChapter.name);
-							console.log('章节ID:', courseChapter.id);
-							
-							this.addVideoForm.chapterName = courseChapter.name;
-							// 强制更新 chapterId 确保一致性
-							this.$set(this.addVideoForm, 'chapterId', String(courseChapter.id));
-							
-							console.log('更新后 addVideoForm.chapterId:', this.addVideoForm.chapterId);
-							console.log('更新后 addVideoForm:', JSON.stringify(this.addVideoForm));
+							selectedChapter = courseChapter;
 							break;
 						}
+					}
+					
+					if(selectedChapter){
+						console.log('✅ 匹配成功！');
+						console.log('章节名称:', selectedChapter.name);
+						console.log('章节ID:', selectedChapter.id);
+						
+						// 手动同步 updateVideoForm 和 selectedChapterId
+						this.$set(this.addVideoForm, 'chapterId', String(selectedChapter.id));
+						this.$set(this.addVideoForm, 'chapterName', selectedChapter.name);
+						
+						console.log('更新后 addVideoForm:', JSON.stringify(this.addVideoForm));
+						console.log('selectedChapterId:', this.selectedChapterId);
+					} else {
+						console.error('❌ 未找到匹配的章节！');
 					}
 				}
 			},
@@ -333,6 +341,8 @@
 			//编辑视频
 			handleEdit(row){
 				this.addVideoForm = Object.assign({}, row);
+				// 回显选中的章节ID
+				this.selectedChapterId = row.chapterId ? String(row.chapterId) : '';
 				this.addVideoFormVisible = true;
 				//加载章节列表
 				this.getCourseChapter();
@@ -380,7 +390,8 @@
 									});
 									this.addVideoFormVisible = false;
 									this.getTableData();
-									//重置表单
+									//重置表单和选中的章节ID
+									this.selectedChapterId = '';
 									this.addVideoForm = {
 										chapterId:"",
 										chapterName:'',

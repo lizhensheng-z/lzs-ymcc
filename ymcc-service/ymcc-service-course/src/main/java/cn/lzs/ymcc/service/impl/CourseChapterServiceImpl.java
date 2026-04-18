@@ -79,8 +79,12 @@ public class CourseChapterServiceImpl extends ServiceImpl<CourseChapterMapper, C
             }
             System.out.println("视频数量: " + finalMediaFiles.size());
             for (MediaFile file : finalMediaFiles) {
-                System.out.println("视频 chapterId: " + file.getChapterId() + " (类型: " + 
-                    (file.getChapterId() != null ? file.getChapterId().getClass().getName() : "null") + ")");
+                Object chapterId = file.getChapterId();
+                String chapterIdType = chapterId != null ? chapterId.getClass().getName() : "null";
+                System.out.println("视频ID: " + file.getId() + 
+                    ", chapterId: " + chapterId + 
+                    " (类型: " + chapterIdType + ")" +
+                    ", name: " + file.getName());
             }
         }
         
@@ -89,9 +93,45 @@ public class CourseChapterServiceImpl extends ServiceImpl<CourseChapterMapper, C
                     .orElse(Collections.emptyList())
                     .stream()
                     .filter(Objects::nonNull)
-                    .filter(file -> Objects.equals(file.getChapterId(), chapter.getId()))
+                    .filter(file -> {
+                        Object fileChapterId = file.getChapterId();
+                        Long chapterId = chapter.getId();
+                        
+                        // 详细调试：打印每次比较的值和类型
+                        boolean matched = false;
+                        if (fileChapterId != null && chapterId != null) {
+                            // 统一转换为 Long 类型比较
+                            Long fileChapterIdLong = null;
+                            if (fileChapterId instanceof Long) {
+                                fileChapterIdLong = (Long) fileChapterId;
+                            } else if (fileChapterId instanceof Integer) {
+                                fileChapterIdLong = ((Integer) fileChapterId).longValue();
+                            } else if (fileChapterId instanceof String) {
+                                try {
+                                    fileChapterIdLong = Long.parseLong((String) fileChapterId);
+                                } catch (NumberFormatException e) {
+                                    System.err.println("无法将 chapterId 转换为 Long: " + fileChapterId);
+                                }
+                            } else {
+                                System.err.println("未知的 chapterId 类型: " + fileChapterId.getClass().getName());
+                            }
+                            
+                            if (fileChapterIdLong != null) {
+                                matched = Objects.equals(fileChapterIdLong, chapterId);
+                            }
+                        }
+                        
+                        if (matched) {
+                            System.out.println("✅ 匹配成功！章节ID: " + chapterId + 
+                                " (类型: " + chapterId.getClass().getName() + ")" + 
+                                " <-> 视频chapterId: " + fileChapterId + 
+                                " (类型: " + (fileChapterId != null ? fileChapterId.getClass().getName() : "null") + ")");
+                        }
+                        
+                        return matched;
+                    })
                     .collect(Collectors.toList());
-            System.out.println("章节 " + chapter.getId() + " 匹配到 " + files.size() + " 个视频");
+            System.out.println("章节 " + chapter.getId() + " (" + chapter.getName() + ") 匹配到 " + files.size() + " 个视频");
             chapter.setMediaFiles(files);
         });
 
