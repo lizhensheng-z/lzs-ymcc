@@ -227,6 +227,14 @@
 						
 						console.log('处理后的章节列表:', this.courseChapters);
 						console.log('========================');
+						
+						// 如果有选中的章节ID，确保回显正确
+						if(this.selectedChapterId){
+							console.log('回显选中的章节ID:', this.selectedChapterId);
+						}
+					}).catch(error => {
+						console.error('加载章节列表失败:', error);
+						this.$message.error('加载章节列表失败');
 					});
 				}
 			},
@@ -235,6 +243,7 @@
 				// 添加更详细的调试日志
 				console.log('====== 选择章节调试信息 ======');
 				console.log('传入的章节ID:', courseChapterId, '类型:', typeof courseChapterId);
+				console.log('当前 selectedChapterId:', this.selectedChapterId);
 				console.log('章节列表:', this.courseChapters);
 				console.log('============================');
 				
@@ -255,15 +264,25 @@
 						console.log('章节名称:', selectedChapter.name);
 						console.log('章节ID:', selectedChapter.id);
 						
-						// 手动同步 updateVideoForm 和 selectedChapterId
+						// 手动同步 addVideoForm
 						this.$set(this.addVideoForm, 'chapterId', String(selectedChapter.id));
 						this.$set(this.addVideoForm, 'chapterName', selectedChapter.name);
 						
+						// 确保 selectedChapterId 也同步更新
+						this.selectedChapterId = String(selectedChapter.id);
+						
 						console.log('更新后 addVideoForm:', JSON.stringify(this.addVideoForm));
-						console.log('selectedChapterId:', this.selectedChapterId);
+						console.log('更新后 selectedChapterId:', this.selectedChapterId);
+						console.log('✅ 章节选择成功！');
 					} else {
 						console.error('❌ 未找到匹配的章节！');
+						this.$message.error('选择章节失败，请重新选择');
 					}
+				} else {
+					console.warn('章节ID为空，清空选择');
+					this.selectedChapterId = '';
+					this.$set(this.addVideoForm, 'chapterId', '');
+					this.$set(this.addVideoForm, 'chapterName', '');
 				}
 			},
 			//试看start==============================
