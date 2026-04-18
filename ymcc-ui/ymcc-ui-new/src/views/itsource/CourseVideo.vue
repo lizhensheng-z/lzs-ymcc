@@ -202,20 +202,29 @@
 			getCourseChapter(){
 				if(this.addVideoForm.courseId){
 					this.$http.get("/course/courseChapter/listByCourseId/"+this.addVideoForm.courseId).then(result=>{
-						this.courseChapters = result.data.data;
+						this.courseChapters = result.data.data || [];
+						
+						// 如果已经有 chapterId，自动设置 chapterName（编辑场景）
+						if (this.addVideoForm.chapterId) {
+							const chapter = this.courseChapters.find(item => item.id === this.addVideoForm.chapterId);
+							if (chapter) {
+								this.addVideoForm.chapterName = chapter.name;
+							}
+						}
+					}).catch(error => {
+						this.$message({
+							message: '加载章节列表失败',
+							type: 'error'
+						});
 					});
 				}
 			},
 			//选择章节
 			selectCourseChapter(courseChapterId){
 				if(courseChapterId){
-					for(let i = 0 ; i < this.courseChapters.length ; i++){
-						let courseChapter = this.courseChapters[i];
-						console.log(courseChapter);
-						if(courseChapter.id === courseChapterId){
-							this.addVideoForm.chapterName = courseChapter.name;
-							break;
-						}
+					const chapter = this.courseChapters.find(item => item.id === courseChapterId);
+					if (chapter) {
+						this.addVideoForm.chapterName = chapter.name;
 					}
 				}
 			},
