@@ -99,7 +99,13 @@ public class MediaFileController {
             // 文件扩展名
             @RequestParam("fileExt") String fileExt){
 
-        log.info("合并文件 fileName={} ，fileMd5={} ",fileName,fileMd5);
+        log.info("====== 合并文件调试信息 ======");
+        log.info("fileName={}, fileMd5={}", fileName, fileMd5);
+        log.info("接收到的参数 - chapterId={} (类型: {})", chapterId, chapterId != null ? chapterId.getClass().getName() : "null");
+        log.info("接收到的参数 - courseId={} (类型: {})", courseId, courseId != null ? courseId.getClass().getName() : "null");
+        log.info("接收到的参数 - chapterName={}", chapterName);
+        log.info("==============================");
+        
         return mediaFileService.mergechunks(fileMd5,fileName,fileSize,mimetype,fileExt,chapterId,courseId,videoNumber,name,courseName,chapterName);
     }
     /**

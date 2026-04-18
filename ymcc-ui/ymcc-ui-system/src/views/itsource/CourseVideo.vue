@@ -215,11 +215,18 @@
 			//选择章节
 			selectCourseChapter(courseChapterId){
 				if(courseChapterId){
+					// 添加调试日志
+					console.log('选择的章节ID:', courseChapterId, '类型:', typeof courseChapterId);
+					console.log('章节列表:', this.courseChapters);
+					
 					for(let i = 0 ; i < this.courseChapters.length ; i++){
 						let courseChapter = this.courseChapters[i];
-						console.log(courseChapter);
-						if(courseChapter.id === courseChapterId){
+						// 修复：统一转为字符串比较，避免类型不一致问题
+						if(String(courseChapter.id) === String(courseChapterId)){
 							this.addVideoForm.chapterName = courseChapter.name;
+							// 确保 chapterId 赋值为正确的字符串
+							this.addVideoForm.chapterId = String(courseChapter.id);
+							console.log('匹配成功，章节名称:', courseChapter.name, '章节ID:', courseChapter.id);
 							break;
 						}
 					}
