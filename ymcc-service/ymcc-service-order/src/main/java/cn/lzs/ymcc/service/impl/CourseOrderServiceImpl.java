@@ -18,11 +18,14 @@ import cn.lzs.ymcc.service.ICourseOrderService;
 import cn.lzs.ymcc.util.AssertUtil;
 import cn.lzs.ymcc.util.CodeGenerateUtils;
 import cn.lzs.ymcc.util.LoginContext;
+import cn.lzs.ymcc.vo.UserOrderVO;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.baomidou.mybatisplus.mapper.Wrapper;
+import com.baomidou.mybatisplus.plugins.Page;
 import com.baomidou.mybatisplus.service.impl.ServiceImpl;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.client.producer.LocalTransactionState;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.client.producer.SendStatus;
@@ -38,6 +41,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -651,6 +655,187 @@ public class CourseOrderServiceImpl extends ServiceImpl<CourseOrderMapper, Cours
 
         log.info("秒杀订单保存成功，订单号：{}, 用户ID: {}, 课程ID: {}, 金额：{}", orderNo, userId, courseId, amount);
         return orderNo;
+    }
+
+    /**
+     * 用户端分页查询订单列表（支持日期范围查询）
+     */
+    @Override
+    public Page<UserOrderVO> queryUserOrderPage(Long userId, UserOrderQueryDTO query) {
+        // 1. 构建分页对象
+        Page<UserOrderVO> page = new Page<>(query.getPageNum(), query.getPageSize());
+
+        // 2. 构建查询条件
+        EntityWrapper<CourseOrder> wrapper = new EntityWrapper<>();
+        wrapper.eq("user_id", userId);  // 只查询当前用户的订单
+
+        // 2.1 日期范围查询
+        if (query.getStartDate() != null) {
+            wrapper.ge("create_time", query.getStartDate());
+        }
+        if (query.getEndDate() != null) {
+            // 结束日期加一天，实现包含结束日期当天的效果
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(query.getEndDate());
+            cal.add(Calendar.DAY_OF_MONTH, 1);
+            wrapper.lt("create_time", cal.getTime());
+        }
+
+        // 2.2 订单状态筛选
+        if (query.getStatusOrder() != null) {
+            wrapper.eq("status_order", query.getStatusOrder());
+        }
+
+        // 2.3 订单编号模糊查询
+        if (StringUtils.isNotBlank(query.getOrderNo())) {
+            wrapper.like("order_no", query.getOrderNo().trim());
+        }
+
+        // 2.4 按创建时间倒序排列
+        wrapper.orderBy("create_time", false);
+
+        // 3. 查询订单主表数据
+        List<CourseOrder> orders = courseOrderMapper.selectPage(
+                new Page<>(query.getPageNum(), query.getPageSize()), wrapper);
+
+        // 4. 转换为VO并填充明细
+        List<UserOrderVO> voList = new ArrayList<>();
+        for (CourseOrder order : orders) {
+            UserOrderVO vo = convertToVO(order);
+
+            // 查询订单明细
+            EntityWrapper<CourseOrderItem> itemWrapper = new EntityWrapper<>();
+            itemWrapper.eq("order_id", order.getId());
+            List<CourseOrderItem> items = courseOrderItemMapper.selectList(itemWrapper);
+
+            // 转换明细
+            List<UserOrderVO.OrderItemVO> itemVOList = items.stream()
+                    .map(this::convertItemToVO)
+                    .collect(Collectors.toList());
+            vo.setItems(itemVOList);
+
+            voList.add(vo);
+        }
+
+        // 5. 查询总数
+        Integer total = courseOrderMapper.selectCount(wrapper);
+
+        // 6. 设置分页结果
+        page.setRecords(voList);
+        page.setTotal(total);
+
+        return page;
+    }
+
+    /**
+     * 用户端订单详情查询
+     */
+    @Override
+    public UserOrderVO getUserOrderDetail(Long userId, String orderNo) {
+        // 1. 查询订单主表
+        EntityWrapper<CourseOrder> wrapper = new EntityWrapper<>();
+        wrapper.eq("user_id", userId);
+        wrapper.eq("order_no", orderNo);
+        List<CourseOrder> orders = courseOrderMapper.selectList(wrapper);
+
+        if (orders == null || orders.isEmpty()) {
+            return null;
+        }
+
+        CourseOrder order = orders.get(0);
+
+        // 2. 转换为VO
+        UserOrderVO vo = convertToVO(order);
+
+        // 3. 查询订单明细
+        EntityWrapper<CourseOrderItem> itemWrapper = new EntityWrapper<>();
+        itemWrapper.eq("order_id", order.getId());
+        List<CourseOrderItem> items = courseOrderItemMapper.selectList(itemWrapper);
+
+        // 4. 转换明细
+        List<UserOrderVO.OrderItemVO> itemVOList = items.stream()
+                .map(this::convertItemToVO)
+                .collect(Collectors.toList());
+        vo.setItems(itemVOList);
+
+        return vo;
+    }
+
+    /**
+     * 订单实体转VO
+     */
+    private UserOrderVO convertToVO(CourseOrder order) {
+        UserOrderVO vo = new UserOrderVO();
+        vo.setId(order.getId());
+        vo.setOrderNo(order.getOrderNo());
+        vo.setTitle(order.getTitle());
+        vo.setTotalAmount(order.getTotalAmount());
+        vo.setTotalCount(order.getTotalCount());
+        vo.setStatusOrder(order.getStatusOrder());
+        vo.setStatusDesc(getStatusDesc(order.getStatusOrder()));
+        vo.setPayType(order.getPayType());
+        vo.setPayTypeDesc(getPayTypeDesc(order.getPayType()));
+        vo.setCreateTime(order.getCreateTime());
+        vo.setUpdateTime(order.getUpdateTime());
+        return vo;
+    }
+
+    /**
+     * 订单明细实体转VO
+     */
+    private UserOrderVO.OrderItemVO convertItemToVO(CourseOrderItem item) {
+        UserOrderVO.OrderItemVO vo = new UserOrderVO.OrderItemVO();
+        vo.setId(item.getId());
+        vo.setCourseId(item.getCourseId());
+        vo.setCourseName(item.getCourseName());
+        vo.setCoursePic(item.getCoursePic());
+        vo.setAmount(item.getAmount());
+        vo.setCount(item.getCount());
+        return vo;
+    }
+
+    /**
+     * 获取订单状态描述
+     */
+    private String getStatusDesc(Integer statusOrder) {
+        if (statusOrder == null) {
+            return "未知";
+        }
+        switch (statusOrder) {
+            case 0:
+                return "待支付";
+            case 1:
+                return "已完成";
+            case 2:
+                return "已取消";
+            case 3:
+                return "支付失败";
+            case 4:
+                return "超时取消";
+            default:
+                return "未知";
+        }
+    }
+
+    /**
+     * 获取支付方式描述
+     */
+    private String getPayTypeDesc(Integer payType) {
+        if (payType == null) {
+            return "未知";
+        }
+        switch (payType) {
+            case 0:
+                return "余额支付";
+            case 1:
+                return "支付宝";
+            case 2:
+                return "微信支付";
+            case 3:
+                return "银联支付";
+            default:
+                return "未知";
+        }
     }
 
 }
