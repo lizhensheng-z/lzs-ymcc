@@ -292,11 +292,11 @@ export default {
       this.loading = true
       try {
         const res = await getUserOrderList(this.queryParams)
-        if (res.success) {
-          this.orders = res.data.records || []
-          this.total = res.data.total || 0
+        if (res.data && res.data.success) {
+          this.orders = res.data.data.records || []
+          this.total = res.data.data.total || 0
         } else {
-          this.$message.error(res.message || '查询失败')
+          this.$message.error(res.data.message || '查询失败')
         }
       } catch (error) {
         console.error('查询订单失败:', error)

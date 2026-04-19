@@ -11,7 +11,7 @@ import axios from 'axios'
  * @param {string} params.orderNo - 订单编号 (可选，模糊查询)
  */
 export function getUserOrderList(params) {
-  return axios.post('/user/order/list', params).then(res => res.data)
+  return axios.post('/user/order/list', params)
 }
 
 /**
@@ -19,5 +19,5 @@ export function getUserOrderList(params) {
  * @param {string} orderNo 订单编号
  */
 export function getOrderDetail(orderNo) {
-  return axios.get(`/user/order/detail/${orderNo}`).then(res => res.data)
+  return axios.get(`/user/order/detail/${orderNo}`)
 }
