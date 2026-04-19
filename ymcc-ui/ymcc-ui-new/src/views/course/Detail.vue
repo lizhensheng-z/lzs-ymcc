@@ -26,25 +26,30 @@
     </div>
 
     <!-- 课程信息 -->
-    <div class="course-info-section">
-      <div class="course-info-content">
+     <div class="course-info-section" v-loading="loading">
+       <div class="course-info-content">
         <div class="course-left">
           <div class="course-cover">
-            <img v-if="course.pic" :src="course.pic" :alt="course.name">
-            <div v-else class="cover-placeholder">{{ (course.name || '课').charAt(0) }}</div>
-          </div>
+             <img v-if="course.pic" :src="course.pic" :alt="course.name" @error="handleCoverError">
+             <div v-else class="cover-placeholder">{{ (course.name || '课').charAt(0) }}</div>
+           </div>
         </div>
         <div class="course-right">
           <h1 class="course-title">{{ course.name }}</h1>
-          <div class="course-desc">{{ course.description }}</div>
+           <div class="course-desc">{{ course.description || course.forUser || '暂无描述' }}</div>
           <div class="course-meta">
             <span class="teacher" v-if="course.teacherNames">讲师：{{ course.teacherNames }}</span>
             <span class="students" v-if="course.totalMinute">时长：{{ Math.floor(course.totalMinute / 60) }}小时</span>
           </div>
           <div class="course-price">
-            <span class="price" v-if="course.price > 0">¥{{ course.price }}</span>
-            <span class="price free" v-else>免费</span>
-          </div>
+             <span class="price" v-if="course.charge === 2 && course.price > 0">
+               ¥{{ course.price }}
+               <span class="old-price" v-if="course.priceOld" style="text-decoration: line-through; font-size: 16px; color: #999; margin-left: 10px;">
+                 ¥{{ course.priceOld }}
+               </span>
+             </span>
+             <span class="price free" v-else>免费</span>
+           </div>
           <div class="course-actions">
             <el-button type="primary" size="large" @click="buyNow">立即购买</el-button>
             <el-button size="large" @click="addToCart">加入购物车</el-button>
@@ -67,13 +72,16 @@
           <div class="chapter-content">
             <div
               class="video-item"
-              v-for="video in chapter.videos"
+              v-for="video in chapter.mediaFiles"
               :key="video.id"
               @click="playVideo(video)"
             >
               <i class="el-icon-video-play"></i>
-              <span class="video-name">{{ video.name }}</span>
+              <span class="video-name">{{ video.name || video.fileOriginalName }}</span>
               <span class="video-duration" v-if="video.duration">{{ video.duration }}分钟</span>
+            </div>
+            <div v-if="!chapter.mediaFiles || chapter.mediaFiles.length === 0" class="empty-videos">
+              <p>暂无视频</p>
             </div>
           </div>
         </el-collapse-item>
@@ -91,21 +99,22 @@
 export default {
   name: 'CourseDetail',
   data() {
-    return {
-      isLoggedIn: false,
-      userInfo: {},
-      courseId: null,
-      course: {},
-      chapters: [],
-      activeChapter: []
-    }
-  },
+     return {
+       isLoggedIn: false,
+       userInfo: {},
+       courseId: null,
+       course: {},
+       chapters: [],
+       activeChapter: [],
+       loading: false
+     }
+   },
   mounted() {
-    this.courseId = this.$route.params.id
-    this.checkLogin()
-    this.loadCourseDetail()
-    this.loadChapters()
-  },
+     this.courseId = this.$route.params.id
+     this.checkLogin()
+     this.loadCourseDetail()
+     // loadChapters 会在 loadCourseDetail 中根据需要调用，避免重复加载
+   },
   methods: {
     checkLogin() {
       this.isLoggedIn = !!localStorage.getItem('U-TOKEN')
@@ -117,19 +126,52 @@ export default {
       }
     },
     loadCourseDetail() {
+      this.loading = true
       this.$http.get(`/course/course/detail/data/${this.courseId}`)
         .then(res => {
           if (res.data.success) {
-            this.course = res.data.data || {}
+            const data = res.data.data || {}
+            // CourseDetailDataVO 包含多个对象，需要正确提取
+            this.course = data.course || {}
+            // 如果有营销信息，合并到课程对象
+            if (data.courseMarket) {
+              // charge: 1=免费，2=收费
+              this.course.charge = data.courseMarket.charge
+              this.course.price = data.courseMarket.price || 0
+              this.course.priceOld = data.courseMarket.priceOld
+            }
+            // 如果有详情信息，合并描述
+            if (data.courseDetail) {
+              this.course.description = data.courseDetail.description || this.course.forUser
+            }
+            // 如果有讲师信息
+            if (data.teachers && data.teachers.length > 0) {
+              this.course.teacherNames = data.teachers.map(t => t.name).join('、')
+            }
+            // 如果章节在详情数据中，直接使用
+            if (data.courseChapters && data.courseChapters.length > 0) {
+              this.chapters = data.courseChapters
+              this.activeChapter = [this.chapters[0].id]
+            } else {
+              // 否则单独加载章节
+              this.loadChapters()
+            }
           }
+          this.loading = false
         })
         .catch(() => {
-          // 使用基本信息
+          // 使用基本信息接口
           this.$http.get(`/course/course/${this.courseId}`)
             .then(res => {
               if (res.data.success) {
                 this.course = res.data.data || {}
+                this.loadChapters()
               }
+              this.loading = false
+            })
+            .catch(() => {
+              this.loading = false
+              this.$message.error('课程信息加载失败')
             })
         })
     },
@@ -142,6 +184,9 @@ export default {
               this.activeChapter = [this.chapters[0].id]
             }
           }
+        })
+        .catch(() => {
+          this.$message.error('章节信息加载失败')
         })
     },
     buyNow() {
@@ -173,14 +218,22 @@ export default {
       })
     },
     playVideo(video) {
-      if (!this.isLoggedIn) {
-        this.$message.warning('请先登录')
-        return
-      }
-      // 跳转学习页面
-      this.$router.push(`/user/course/learn/${this.courseId}?videoId=${video.id}`)
-    },
-    logout() {
+       if (!this.isLoggedIn) {
+         this.$message.warning('请先登录')
+         return
+       }
+       // 跳转学习页面
+       this.$router.push(`/user/course/learn/${this.courseId}?videoId=${video.id}`)
+     },
+     handleCoverError(e) {
+       // 封面加载失败时显示占位符
+       e.target.style.display = 'none'
+       const placeholder = document.createElement('div')
+       placeholder.className = 'cover-placeholder'
+       placeholder.textContent = (this.course.name || '课').charAt(0)
+       e.target.parentNode.appendChild(placeholder)
+     },
+     logout() {
       localStorage.clear()
       this.$router.push('/')
     }
@@ -346,6 +399,13 @@ export default {
 
   .chapter-content {
     padding: 10px 0;
+  }
+
+  .empty-videos {
+    text-align: center;
+    padding: 20px;
+    color: #999;
+    font-size: 14px;
   }
 
   .video-item {
