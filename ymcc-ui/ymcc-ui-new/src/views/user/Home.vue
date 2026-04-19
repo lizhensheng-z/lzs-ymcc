@@ -66,20 +66,20 @@
       <!-- 推荐课程 -->
       <div class="recommend-section">
         <h2>推荐课程</h2>
-        <div class="course-list">
-          <div class="course-item" v-for="course in recommendCourses" :key="course.id">
-            <img :src="course.image || 'https://via.placeholder.com/200x120'">
-            <div class="course-info">
-              <h4>{{ course.title }}</h4>
-              <p class="price">¥{{ course.price }}</p>
-              <router-link :to="'/course/detail/' + course.id" class="buy-btn">查看详情</router-link>
-            </div>
-          </div>
-          <div class="empty" v-if="!recommendCourses.length">
-            <p>暂无推荐课程</p>
-            <router-link to="/course/list">去选课</router-link>
-          </div>
-        </div>
+         <div class="course-list">
+           <div class="course-item" v-for="course in recommendCourses" :key="course.id">
+             <img :src="course.image || defaultCover" :alt="course.title" @error="handleImageError">
+             <div class="course-info">
+               <h4>{{ course.title }}</h4>
+               <p class="price">¥{{ course.price }}</p>
+               <router-link :to="'/course/detail/' + course.id" class="buy-btn">查看详情</router-link>
+             </div>
+           </div>
+           <div class="empty" v-if="!recommendCourses.length">
+             <p>暂无推荐课程</p>
+             <router-link to="/course/list">去选课</router-link>
+           </div>
+         </div>
       </div>
     </div>
 
@@ -91,12 +91,15 @@
 </template>
 
 <script>
+import defaultCoverImg from '@/assets/java.jpeg'
+
 export default {
   name: 'UserHome',
   data() {
     return {
       isLoggedIn: false,
       userInfo: {},
+      defaultCover: defaultCoverImg,
       recommendCourses: []
     }
   },
@@ -151,6 +154,10 @@ export default {
         .catch(() => {
           this.recommendCourses = []
         })
+    },
+    handleImageError(e) {
+      // 图片加载失败时使用默认图片
+      e.target.src = this.defaultCover
     },
     logout() {
       localStorage.clear()

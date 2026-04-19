@@ -47,27 +47,27 @@
         <router-link to="/kill">查看全部</router-link>
       </div>
       <div class="kill-list">
-        <div class="kill-card" v-for="course in killCourses" :key="course.id" @click="goKillDetail(course)">
-          <div class="kill-img">
-            <img v-if="course.coursePic" :src="course.coursePic" :alt="course.courseName">
-            <div v-else class="kill-placeholder">{{ (course.courseName || '秒').charAt(0) }}</div>
-            <div class="kill-badge">秒杀</div>
-          </div>
-          <div class="kill-info">
-            <h3>{{ course.courseName }}</h3>
-            <div class="kill-price">
-              <span class="current-price">¥{{ course.killPrice }}</span>
-              <span class="original-price">¥{{ course.price }}</span>
-            </div>
-            <div class="kill-status">
-              <span v-if="course.isUnbegin" class="status unbegin">即将开始</span>
-              <span v-else-if="course.isKilling" class="status killing">秒杀中</span>
-              <span v-else class="status ended">已结束</span>
-              <span class="count">库存: {{ course.killCount }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
+       <div class="kill-card" v-for="course in killCourses" :key="course.id" @click="goKillDetail(course)">
+         <div class="kill-img">
+           <img v-if="course.coursePic" :src="course.coursePic" :alt="course.courseName" @error="handleKillImageError">
+           <img v-else :src="defaultCover" :alt="course.courseName">
+           <div class="kill-badge">秒杀</div>
+         </div>
+         <div class="kill-info">
+           <h3>{{ course.courseName }}</h3>
+           <div class="kill-price">
+             <span class="current-price">¥{{ course.killPrice }}</span>
+             <span class="original-price">¥{{ course.price }}</span>
+           </div>
+           <div class="kill-status">
+             <span v-if="course.isUnbegin" class="status unbegin">即将开始</span>
+             <span v-else-if="course.isKilling" class="status killing">秒杀中</span>
+             <span v-else class="status ended">已结束</span>
+             <span class="count">库存: {{ course.killCount }}</span>
+           </div>
+         </div>
+       </div>
+     </div>
     </div>
 
     <!-- 课程列表 -->
@@ -79,8 +79,8 @@
        <div class="course-list" v-if="hotCourses.length > 0">
          <div class="course-card" v-for="course in hotCourses" :key="course.id" @click="goDetail(course.id)">
            <div class="course-img" :style="course.image ? {} : { background: course.bg }">
-             <img v-if="course.image" :src="course.image" :alt="course.title">
-             <div v-else class="course-placeholder">{{ (course.title || '课').charAt(0) }}</div>
+             <img v-if="course.image" :src="course.image" :alt="course.title" @error="handleCourseImageError">
+             <img v-else :src="defaultCover" :alt="course.title">
              <div class="course-tag" v-if="course.tag">{{ course.tag }}</div>
            </div>
            <div class="course-info">
@@ -123,6 +123,8 @@
 </template>
 
 <script>
+import defaultCoverImg from '@/assets/java.jpeg'
+
 export default {
   name: 'CourseIndex',
   data() {
@@ -130,6 +132,7 @@ export default {
       isLoggedIn: false,
       userInfo: {},
       killCourses: [],  // 秒杀课程列表
+      defaultCover: defaultCoverImg,
       banners: [
         { image: '', title: '首页轮播1', bg: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', text: '云课教育 - 开启学习之旅' },
         { image: '', title: '首页轮播2', bg: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', text: '精品课程 等你来学' },
@@ -210,9 +213,19 @@ export default {
         })
     },
     goDetail(id) {
-      this.$router.push(`/course/detail/${id}`)
-    },
-    // 加载秒杀课程
+       this.$router.push(`/course/detail/${id}`)
+     },
+     // 处理课程图片加载失败
+     handleCourseImageError(e) {
+       // 课程图片加载失败时使用默认图片
+       e.target.src = this.defaultCover
+     },
+     // 处理秒杀课程图片加载失败
+     handleKillImageError(e) {
+       // 秒杀课程图片加载失败时使用默认图片
+       e.target.src = this.defaultCover
+     },
+     // 加载秒杀课程
     loadKillCourses() {
       this.$http.get('/kill/killCourse/online/all')
         .then(res => {

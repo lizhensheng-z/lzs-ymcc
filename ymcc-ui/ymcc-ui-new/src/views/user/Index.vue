@@ -144,24 +144,24 @@
         </div>
 
         <!-- 最近学习 -->
-        <div class="section">
-          <div class="section-header">
-            <h3>最近学习</h3>
-            <router-link to="/course/list">去选课</router-link>
-          </div>
-          <div class="course-list">
-            <div class="course-item" v-for="course in recentCourses" :key="course.id">
-              <img :src="course.image || 'https://via.placeholder.com/200x120'">
-              <div class="course-info">
-                <h4>{{ course.title }}</h4>
-                <el-progress :percentage="course.progress || 0" :stroke-width="6"></el-progress>
-              </div>
-            </div>
-            <div class="empty" v-if="!recentCourses.length">
-              <p>暂无学习记录</p>
-              <router-link to="/course/list">去选课</router-link>
-            </div>
-          </div>
+         <div class="section">
+           <div class="section-header">
+             <h3>最近学习</h3>
+             <router-link to="/course/list">去选课</router-link>
+           </div>
+           <div class="course-list">
+             <div class="course-item" v-for="course in recentCourses" :key="course.id">
+               <img :src="course.image || defaultAvatar" :alt="course.title" @error="handleImageError">
+               <div class="course-info">
+                 <h4>{{ course.title }}</h4>
+                 <el-progress :percentage="course.progress || 0" :stroke-width="6"></el-progress>
+               </div>
+             </div>
+             <div class="empty" v-if="!recentCourses.length">
+               <p>暂无学习记录</p>
+               <router-link to="/course/list">去选课</router-link>
+             </div>
+           </div>
         </div>
       </div>
     </div>
@@ -226,6 +226,10 @@ export default {
     },
     loadRecentCourses() {
       this.recentCourses = []
+    },
+    handleImageError(e) {
+      // 图片加载失败时使用默认图片
+      e.target.src = this.defaultAvatar
     },
     handleAvatarError(e) {
       // 头像加载失败时使用默认头像
