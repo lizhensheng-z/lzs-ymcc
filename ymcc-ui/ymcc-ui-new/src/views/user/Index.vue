@@ -66,32 +66,33 @@
       <!-- 右侧内容 -->
       <div class="content">
         <!-- 用户信息卡片 -->
-        <div class="user-header">
-          <div class="user-info-box">
-             <div class="avatar">
-               <img :src="userInfo.headImg || defaultAvatar" @error="handleAvatarError">
+         <div class="user-header">
+           <div class="user-info-box">
+              <div class="avatar">
+                <img :src="userInfo.headImg || defaultAvatar" @error="handleAvatarError">
+              </div>
+             <div class="info">
+               <h2>{{ userInfo.username }}</h2>
+               <p>等级：{{ userInfo.levelName || 'VIP会员' }} | 成长值：{{ userInfo.growthValue || 0 }}</p>
+               <p>邮箱：{{ userInfo.email || '未绑定' }} | 手机：{{ userInfo.phone || '未绑定' }}</p>
              </div>
-            <div class="info">
-              <h2>{{ userInfo.username }}</h2>
-              <p>等级：{{ userInfo.levelName || 'VIP会员' }} | 成长值：{{ userInfo.growthValue || 0 }}</p>
-              <p>邮箱：{{ userInfo.email || '未绑定' }} | 手机：{{ userInfo.phone || '未绑定' }}</p>
-            </div>
-          </div>
-          <div class="user-stats">
-            <div class="stat-item">
-              <div class="stat-value">{{ stats.orderCount }}</div>
-              <div class="stat-label">订单数</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-value">{{ stats.courseCount }}</div>
-              <div class="stat-label">课程数</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-value">¥{{ stats.balance }}</div>
-              <div class="stat-label">余额</div>
-            </div>
-          </div>
-        </div>
+           </div>
+           <!-- 隐藏订单数、课程数、余额展示 -->
+           <!-- <div class="user-stats">
+             <div class="stat-item">
+               <div class="stat-value">{{ stats.orderCount }}</div>
+               <div class="stat-label">订单数</div>
+             </div>
+             <div class="stat-item">
+               <div class="stat-value">{{ stats.courseCount }}</div>
+               <div class="stat-label">课程数</div>
+             </div>
+             <div class="stat-item">
+               <div class="stat-value">¥{{ stats.balance }}</div>
+               <div class="stat-label">余额</div>
+             </div>
+           </div> -->
+         </div>
 
         <!-- 快捷导航 -->
         <div class="quick-nav">
