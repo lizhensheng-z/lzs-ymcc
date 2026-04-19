@@ -71,30 +71,36 @@
     </div>
 
     <!-- 课程列表 -->
-    <div class="course-section">
-      <div class="section-header">
-        <h2>热门课程</h2>
-        <router-link to="/course/list">查看更多</router-link>
-      </div>
-      <div class="course-list">
-        <div class="course-card" v-for="course in hotCourses" :key="course.id" @click="goDetail(course.id)">
-          <div class="course-img" :style="course.image ? {} : { background: course.bg }">
-            <img v-if="course.image" :src="course.image" :alt="course.title">
-            <div v-else class="course-placeholder">{{ (course.title || '课').charAt(0) }}</div>
-            <div class="course-tag" v-if="course.tag">{{ course.tag }}</div>
-          </div>
-          <div class="course-info">
-            <h3>{{ course.title }}</h3>
-            <p class="course-desc">{{ course.description }}</p>
-            <div class="course-meta">
-              <span class="price" v-if="course.price > 0">¥{{ course.price }}</span>
-              <span class="price free" v-else>免费</span>
-              <span class="student-count">{{ course.studentCount }}人学习</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+     <div class="course-section">
+       <div class="section-header">
+         <h2>热门课程</h2>
+         <router-link to="/course/list">查看更多</router-link>
+       </div>
+       <div class="course-list" v-if="hotCourses.length > 0">
+         <div class="course-card" v-for="course in hotCourses" :key="course.id" @click="goDetail(course.id)">
+           <div class="course-img" :style="course.image ? {} : { background: course.bg }">
+             <img v-if="course.image" :src="course.image" :alt="course.title">
+             <div v-else class="course-placeholder">{{ (course.title || '课').charAt(0) }}</div>
+             <div class="course-tag" v-if="course.tag">{{ course.tag }}</div>
+           </div>
+           <div class="course-info">
+             <h3>{{ course.title }}</h3>
+             <p class="course-desc">{{ course.description }}</p>
+             <div class="course-meta">
+               <span class="price" v-if="course.price > 0">¥{{ course.price }}</span>
+               <span class="price free" v-else>免费</span>
+               <span class="student-count">{{ course.studentCount }}人学习</span>
+             </div>
+           </div>
+         </div>
+       </div>
+       <!-- 空状态 -->
+       <div class="empty-courses" v-else>
+         <i class="el-icon-reading"></i>
+         <p>暂无热门课程</p>
+         <router-link to="/course/list">查看全部课程</router-link>
+       </div>
+     </div>
 
     <!-- 课程分类 -->
     <div class="course-section">
@@ -162,10 +168,15 @@ export default {
         })
     },
     loadHotCourses() {
-      this.$http.get('/course/course/listForUser')
+      // 调用课程分页接口，获取热门课程（取第一页，8条数据）
+      this.$http.post('/course/course/pagelist', {
+        page: 1,
+        rows: 8,
+        keyword: ''
+      })
         .then(res => {
           if (res.data.success) {
-            const courses = (res.data.data || []).slice(0, 8)
+            const courses = res.data.data.rows || []
             // 添加背景色
             const colors = [
               'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -177,41 +188,25 @@ export default {
               'linear-gradient(135deg, #d299c2 0%, #fef9d7 100%)',
               'linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%)'
             ]
-            let hotCourses = courses.map((c, i) => ({
-              ...c,
-              title: c.name || c.title || '课程',
-              description: c.description || '',
-              image: c.pic || c.image || '',
-              price: c.price || 0,
-              studentCount: c.studentCount || 0,
+
+            this.hotCourses = courses.map((c, i) => ({
+              id: c.id,
+              title: c.name,
+              description: c.forUser || '暂无描述',
+              image: c.pic || '',
+              price: 0, // Course表没有价格字段，价格在CourseMarket表
+              studentCount: c.chapterCount || 0,
+              teacherName: c.teacherNames || '',
               bg: colors[i % colors.length]
             }))
-            
-            // 确保至少显示4个课程
-            const minCourses = 4
-            if (hotCourses.length < minCourses) {
-              const defaultCourses = [
-                { id: 1, title: 'Vue.js 实战课程', description: '从入门到精通', price: 99, studentCount: 1234, image: '', bg: colors[0] },
-                { id: 2, title: 'React 进阶课程', description: '深入理解 React 原理', price: 129, studentCount: 2345, image: '', bg: colors[1] },
-                { id: 3, title: 'Node.js 全栈开发', description: '打造完整全栈项目', price: 199, studentCount: 3456, image: '', bg: colors[2] },
-                { id: 4, title: 'Python 入门到实战', description: '零基础学习 Python', price: 0, studentCount: 4567, image: '', bg: colors[3] }
-              ]
-              // 补充默认课程
-              const needCount = minCourses - hotCourses.length
-              hotCourses = [...hotCourses, ...defaultCourses.slice(0, needCount)]
-            }
-            
-            this.hotCourses = hotCourses
+          } else {
+            this.$message.error('加载课程失败：' + (res.data.message || '未知错误'))
           }
         })
-        .catch(() => {
-          // 使用模拟数据（默认4个课程）
-          this.hotCourses = [
-            { id: 1, title: 'Vue.js 实战课程', description: '从入门到精通', price: 99, studentCount: 1234, image: '', bg: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
-            { id: 2, title: 'React 进阶课程', description: '深入理解 React 原理', price: 129, studentCount: 2345, image: '', bg: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' },
-            { id: 3, title: 'Node.js 全栈开发', description: '打造完整全栈项目', price: 199, studentCount: 3456, image: '', bg: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' },
-            { id: 4, title: 'Python 入门到实战', description: '零基础学习 Python', price: 0, studentCount: 4567, image: '', bg: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)' }
-          ]
+        .catch(error => {
+          console.error('加载热门课程失败：', error)
+          this.$message.error('加载课程失败，请稍后重试')
+          this.hotCourses = []
         })
     },
     goDetail(id) {
@@ -510,12 +505,41 @@ export default {
 }
 
 .course-list {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
-}
+   display: grid;
+   grid-template-columns: repeat(4, 1fr);
+   gap: 20px;
+ }
 
-.course-card {
+ .empty-courses {
+   text-align: center;
+   padding: 80px 20px;
+   background: #fff;
+   border-radius: 8px;
+
+   i {
+     font-size: 64px;
+     color: #ddd;
+     margin-bottom: 20px;
+   }
+
+   p {
+     color: #999;
+     font-size: 16px;
+     margin: 0 0 20px;
+   }
+
+   a {
+     color: #667eea;
+     text-decoration: none;
+     font-size: 14px;
+
+     &:hover {
+       text-decoration: underline;
+     }
+   }
+ }
+
+ .course-card {
   background: #fff;
   border-radius: 8px;
   overflow: hidden;

@@ -129,10 +129,23 @@ export default {
         .catch(() => {})
     },
     loadRecommendCourses() {
-      this.$http.get('/course/course/recommend')
+      // 使用课程分页接口获取推荐课程
+      this.$http.post('/course/course/pagelist', {
+        page: 1,
+        rows: 4,
+        keyword: ''
+      })
         .then(res => {
           if (res.data.success) {
-            this.recommendCourses = res.data.data || []
+            const courses = res.data.data.rows || []
+            this.recommendCourses = courses.map(c => ({
+              id: c.id,
+              title: c.name,
+              description: c.forUser || '暂无描述',
+              image: c.pic || '',
+              price: 0, // Course表没有价格字段
+              teacherName: c.teacherNames || ''
+            }))
           }
         })
         .catch(() => {
