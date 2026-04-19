@@ -31,7 +31,7 @@
         <div class="course-left">
           <div class="course-cover">
              <img v-if="course.pic" :src="course.pic" :alt="course.name" @error="handleCoverError">
-             <div v-else class="cover-placeholder">{{ (course.name || '课').charAt(0) }}</div>
+             <img v-else :src="defaultCover" :alt="course.name">
            </div>
         </div>
         <div class="course-right">
@@ -96,19 +96,22 @@
 </template>
 
 <script>
+import defaultCoverImg from '@/assets/java.jpeg'
+
 export default {
   name: 'CourseDetail',
   data() {
-     return {
-       isLoggedIn: false,
-       userInfo: {},
-       courseId: null,
-       course: {},
-       chapters: [],
-       activeChapter: [],
-       loading: false
-     }
-   },
+      return {
+        isLoggedIn: false,
+        userInfo: {},
+        courseId: null,
+        course: {},
+        chapters: [],
+        activeChapter: [],
+        loading: false,
+        defaultCover: defaultCoverImg
+      }
+    },
   mounted() {
      this.courseId = this.$route.params.id
      this.checkLogin()
@@ -226,12 +229,8 @@ export default {
        this.$router.push(`/user/course/learn/${this.courseId}?videoId=${video.id}`)
      },
      handleCoverError(e) {
-       // 封面加载失败时显示占位符
-       e.target.style.display = 'none'
-       const placeholder = document.createElement('div')
-       placeholder.className = 'cover-placeholder'
-       placeholder.textContent = (this.course.name || '课').charAt(0)
-       e.target.parentNode.appendChild(placeholder)
+       // 封面加载失败时使用默认图片
+       e.target.src = this.defaultCover
      },
      logout() {
       localStorage.clear()
